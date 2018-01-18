@@ -2,7 +2,7 @@
 using System.Text;
 using System.IO;
 
-namespace XHtmlKit.Parser
+namespace XHtmlKit
 {
     public enum ParseState
     {

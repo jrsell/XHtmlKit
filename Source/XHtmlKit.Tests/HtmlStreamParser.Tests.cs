@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using XHtmlKit.Parser;
+using XHtmlKit;
 using System.Threading.Tasks;
 using System.Xml;
 

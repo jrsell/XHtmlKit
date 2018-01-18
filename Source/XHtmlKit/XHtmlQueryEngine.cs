@@ -2,7 +2,7 @@
 using System.Xml;
 using System.Collections;
 using System.Threading.Tasks;
-using XHtmlKit.Parser;
+using XHtmlKit;
 
 namespace XHtmlKit.Query
 {

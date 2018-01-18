@@ -30,7 +30,7 @@ namespace XHtmlKit.Tests
         private static string[] _topLevelTag = new string[] {
             "html", "head", "body" };
 
-        [TestMethod]
+        //[TestMethod]
         public void Generate()
         {
             SortedList<string, TagAttributes> tags = new SortedList<string, TagAttributes>();

@@ -1,7 +1,7 @@
-﻿using System.Xml;
-using System.IO;
+﻿using System.IO;
+using System.Xml;
 
-namespace XHtmlKit.Parser
+namespace XHtmlKit
 {
     public abstract class HtmlParser
     {

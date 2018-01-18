@@ -67,8 +67,7 @@ namespace XHtmlKit.Network.Tests
         /// faster, nor slower than reading the entire page into memory before
         /// reading the contents. At the very least, streamed reading offers the 
         /// very real benefit that it consumes less memory.
-        /// </summary>
-        [TestMethod]
+        /// </summary>        
         public async Task TestPerfOfStreamedReading()
         {
             int iters = 2;

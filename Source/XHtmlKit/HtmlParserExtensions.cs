@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using XHtmlKit.Network;
 
-namespace XHtmlKit.Parser
+namespace XHtmlKit
 {
     public static class HtmlParserExtensions
     {

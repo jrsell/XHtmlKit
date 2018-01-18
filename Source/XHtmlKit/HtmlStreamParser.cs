@@ -4,7 +4,7 @@ using System.Xml;
 using System.IO;
 using System.Net;
 
-namespace XHtmlKit.Parser
+namespace XHtmlKit
 {
     public class HtmlStreamParser: HtmlParser
     {
