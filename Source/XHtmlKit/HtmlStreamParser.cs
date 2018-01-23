@@ -69,24 +69,47 @@ namespace XHtmlKit
             return isHeadTag;
         }
 
-        public override void LoadHtml(XmlDocument doc, string html, string originatingUrl=null)
+        public override void LoadHtml(XmlDocument doc, string html, string baseUrl = null)
         {
-            LoadHtml(doc, new StringReader(html), originatingUrl);
+            LoadXHtml(doc, new StringReader(html), baseUrl, InsersionMode.BeforeHtml);
         }
 
-        public override void LoadHtml(XmlDocument doc, TextReader htmlTextReader, string originatingUrl=null)
+        public override void LoadHtml(XmlDocument doc, TextReader htmlTextReader, string baseUrl = null)
         {
+            LoadXHtml(doc, htmlTextReader, baseUrl, InsersionMode.BeforeHtml);
+        }
+
+        public override void LoadHtmlFragment(XmlNode rootNode, string html, string baseUrl = null)
+        {
+            LoadXHtml(rootNode, new StringReader(html), baseUrl, InsersionMode.InBody);
+        }
+
+        public override void LoadHtmlFragment(XmlNode rootNode, TextReader htmlTextReader, string baseUrl = null)
+        {
+            LoadXHtml(rootNode, htmlTextReader, baseUrl, InsersionMode.InBody);
+        }
+
+        private void LoadXHtml(XmlNode rootNode, TextReader htmlTextReader, string baseUrl = null, InsersionMode mode = InsersionMode.BeforeHtml)
+        {
+            // Ensure valid root node type
+            if (! (rootNode is XmlDocument || rootNode is XmlElement))
+                throw new Exception("Invalid rootNode type. Must be either XmlDocument or XmlElement.");
+
+            // Get the ownning document for the root node
+            XmlDocument doc = rootNode is XmlDocument ? (XmlDocument)rootNode: rootNode.OwnerDocument;
+
             // Create HtmlTextReader for html tag tokenization
             HtmlTextReader reader = new HtmlTextReader(htmlTextReader);
 
             // DOM Node pointers
-            XmlNode currTag = doc;
+            XmlNode currNode = rootNode;
             XmlNode htmlNode = null; 
             XmlNode headNode = null; 
             XmlNode bodyNode = null;
 
-            // Initial insertion mode is BeforeHtml;
-            InsersionMode insertionMode = InsersionMode.BeforeHtml;
+            // Set the initial insertion mode. If we are parsing into an XmlDocument, use
+            // BeforeHtml, use InBody;
+            InsersionMode insertionMode = mode;
 
             while (reader.ParseState != ParseState.Done)
             {
@@ -109,7 +132,7 @@ namespace XHtmlKit
                         // <html> is valid at the top - switch to BeforeHead
                         if (state == ParseState.OpenTag && tok == "html") {
                             htmlNode = doc.AppendChild(doc.CreateElement("html"));
-                            currTag = htmlNode;
+                            currNode = htmlNode;
                             insertionMode = InsersionMode.BeforeHead;
                             break;
                         }
@@ -118,7 +141,7 @@ namespace XHtmlKit
                         if (state == ParseState.OpenTag && IsHeadTag(tok)) {
                             htmlNode = doc.AppendChild(doc.CreateElement("html"));
                             headNode = htmlNode.AppendChild(doc.CreateElement("head"));
-                            currTag = headNode;
+                            currNode = headNode;
                             insertionMode = InsersionMode.InHead;
                             break;
                         }
@@ -128,7 +151,7 @@ namespace XHtmlKit
                             htmlNode = doc.AppendChild(doc.CreateElement("html"));
                             headNode = htmlNode.AppendChild(doc.CreateElement("head"));
                             bodyNode = htmlNode.AppendChild(doc.CreateElement("body"));
-                            currTag = bodyNode;
+                            currNode = bodyNode;
                             insertionMode = InsersionMode.InBody;
                             break;
                         }
@@ -142,7 +165,7 @@ namespace XHtmlKit
                         // <head> is valid here - switch to InHead
                         if (state == ParseState.OpenTag && tok == "head") {
                             headNode = htmlNode.AppendChild(doc.CreateElement("head"));
-                            currTag = headNode;
+                            currNode = headNode;
                             insertionMode = InsersionMode.InHead;
                             break;
                         }
@@ -150,7 +173,7 @@ namespace XHtmlKit
                         // Got a tag that 'should' be in the head. Create head... 
                         if (state == ParseState.OpenTag && IsHeadTag(tok)) {
                             headNode = htmlNode.AppendChild(doc.CreateElement("head"));
-                            currTag = headNode;
+                            currNode = headNode;
                             insertionMode = InsersionMode.InHead;
                             break;
                         }
@@ -158,7 +181,7 @@ namespace XHtmlKit
                         // Got anything else, including <body> - put it in the body
                         headNode = htmlNode.AppendChild(doc.CreateElement("head"));
                         bodyNode = htmlNode.AppendChild(doc.CreateElement("body"));
-                        currTag = bodyNode;
+                        currNode = bodyNode;
                         insertionMode = InsersionMode.InBody;
                         break;
 
@@ -175,7 +198,7 @@ namespace XHtmlKit
 
                         // Anything else must go into the body
                         bodyNode = htmlNode.AppendChild(doc.CreateElement("body"));
-                        currTag = bodyNode;
+                        currNode = bodyNode;
                         insertionMode = InsersionMode.InBody;
                         break;
                 }                
@@ -186,13 +209,13 @@ namespace XHtmlKit
                     case ParseState.Comment:
                         // Xml Comments cannot have '--', and they cannot end in '-'
                         string commentText = tok.Replace("-", "#");
-                        currTag.AppendChild(doc.CreateComment(commentText));
+                        currNode.AppendChild(doc.CreateComment(commentText));
                         break; 
 
                     case ParseState.Text:
                         // Decode the text, to convert all encoded values (eg: '&gt;' to '>')
                         string textContent = WebUtility.HtmlDecode(tok);
-                        currTag.AppendChild(doc.CreateTextNode(textContent)); 
+                        currNode.AppendChild(doc.CreateTextNode(textContent)); 
                         break;
                     
                     case ParseState.OpenTag:
@@ -204,11 +227,11 @@ namespace XHtmlKit
                         // For top-level html, body, all we do is add attributes to 
                         // the already create nodes. head tags get ignored
                         if ( (attributes & TagAttributes.TopLevel) > 0 ) {
-                            if (tok == "html") {
+                            if (tok == "html" && htmlNode != null) {
                                 AddAttributes(doc, htmlNode, reader);
                                 break;
                             }
-                            if (tok == "body") {
+                            if (tok == "body" && bodyNode != null) {
                                 AddAttributes(doc, bodyNode, reader);
                                 break;
                             }
@@ -218,8 +241,8 @@ namespace XHtmlKit
                         // Create the new tag, add attributes, and append to DOM
                         XmlNode tag = null;
                         tag = doc.CreateElement(tok);                            
-                        AddAttributes(doc, tag, reader);
-                        currTag.AppendChild(tag);
+                        AddAttributes(doc, tag, reader, baseUrl);
+                        currNode.AppendChild(tag);
 
                         // If this is a self closing tag, we are done. Don't move pointer.
                         if ((attributes & TagAttributes.SelfClosing) > 0)
@@ -233,25 +256,42 @@ namespace XHtmlKit
                         }
 
                         // Set current tag pointer to the newly added tag
-                        currTag = tag;
+                        currNode = tag;
 
                         break;
 
                     case ParseState.CloseTag:
 
                         // Look up our ancestor chain for the corresponding open tag
-                        XmlNode parent = currTag;
-                        while (parent != null && parent.Name != tok)
+                        XmlNode parent = currNode;
+                        bool tagMatch = false;
+                        while (true) {
+
+                            // Got to the top of the tree
+                            if (parent.ParentNode == null)
+                                break;
+                            // Got to our root node
+                            if (parent == rootNode)
+                                break;
+                            // Found a match for our tag
+                            if (parent.Name == tok) {
+                                tagMatch = true;
+                                break;
+                            }
+
+                            // Move up
                             parent = parent.ParentNode;
+                        }
 
                         // If we found a match - move currTag up a level from the match
-                        if (parent != null)
-                            currTag = parent.ParentNode;
+                        if (tagMatch)
+                            currNode = parent.ParentNode;
 
                         // If we moved up beyond the body (for example if there were tags or text 
                         // after the </html> tag - set the pointer to the <body> tag. 
-                        if (currTag == htmlNode || currTag == doc)
-                            currTag = bodyNode;
+                        if (currNode == htmlNode || currNode == doc)
+                            if (bodyNode != null)   // possible we don't have a body node
+                                currNode = bodyNode;
 
                         break;
 
@@ -262,7 +302,7 @@ namespace XHtmlKit
         }
 
         // Read all attributes onto the given tag...
-        private static void AddAttributes(XmlDocument doc, XmlNode tag, HtmlTextReader reader)
+        private static void AddAttributes(XmlDocument doc, XmlNode tag, HtmlTextReader reader, string originatingUrl=null)
         {
             string tok = null;
             ParseState state; 
@@ -304,6 +344,17 @@ namespace XHtmlKit
 
                     // Values can have html encodings - we want them decoded 
                     string attrValue = WebUtility.HtmlDecode(tok);
+
+                    // See if we want to be fully-qualifying UrlAttributes
+                    if (  originatingUrl != null &&
+                        ( (tag.Name == "a" && currAttr.Name == "href") || (tag.Name == "img" && currAttr.Name == "src") ) &&
+                         !attrValue.Contains("://"))
+                    {
+                        Uri baseUri = new Uri(originatingUrl);
+                        Uri compbinedUri = new Uri(baseUri, attrValue);
+                        attrValue = compbinedUri.ToString();
+                    }
+
                     currAttr.Value = attrValue;                    
                     continue;
                 }

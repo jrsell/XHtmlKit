@@ -1,8 +1,8 @@
 ﻿using System.Xml;
 using System.IO;
-using System.Threading.Tasks;
-using System.Net.Http;
-using XHtmlKit.Network;
+//using System.Threading.Tasks;
+//using System.Net.Http;
+//using XHtmlKit.Network;
 
 namespace XHtmlKit
 {
@@ -19,6 +19,17 @@ namespace XHtmlKit
             HtmlParser.DefaultParser.LoadHtml(doc, htmlTextReader, originatingUrl);
         }
 
+        public static void LoadHtmlFragment(this XmlNode rootNode, string html, string originatingUrl = null)
+        {
+            HtmlParser.DefaultParser.LoadHtmlFragment(rootNode, html, originatingUrl);
+        }
+
+        public static void LoadHtmlFragment(this XmlNode rootNode, TextReader htmlTextReader, string originatingUrl = null)
+        {
+            HtmlParser.DefaultParser.LoadHtmlFragment(rootNode, htmlTextReader, originatingUrl);
+        }
+
+        /*
         public static async Task LoadWebPageAsync(this XmlDocument doc, string url)
         {
             using (HttpClient httpClient = new HttpClient())
@@ -26,7 +37,7 @@ namespace XHtmlKit
             {
                 HtmlParser.DefaultParser.LoadHtml(doc, htmlReader, url);
             }
-        }
+        }*/
     }
-    
+
 }

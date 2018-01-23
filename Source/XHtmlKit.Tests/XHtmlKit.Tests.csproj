@@ -54,7 +54,7 @@
     <Compile Include="HtmlTextReader.Tests.cs" />
     <Compile Include="HttpClientExtensions.Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="HtmlAgility.Tests.cs" />
+    <Compile Include="XHtmlQueryEngine.Tests.cs" />
     <Compile Include="HtmlStreamParser.Tests.cs" />
   </ItemGroup>
   <ItemGroup>

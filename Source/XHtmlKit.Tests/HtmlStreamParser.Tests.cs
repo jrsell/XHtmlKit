@@ -69,6 +69,47 @@ namespace XHtmlKit.Parser.Tests
 
         }
 
+        [TestMethod]
+        public void Test_LoadHtmlElement()
+        {
+            string html = @"
+                <html>
+                <div>
+                    <h1>Hello World</h1>
+                    <body foo='bar'>
+                </div></html>";
+            XmlDocument doc = new XmlDocument();
+            doc.LoadHtmlFragment(html);
+
+            Console.WriteLine(doc.OuterXml);
+
+            // Ensure we are not inserting html, head or body nodes...
+            Assert.AreEqual("div", doc.DocumentElement.Name);
+        }
+
+        [TestMethod]
+        public void Test_LoadHtmlElementFragment()
+        {
+            string html = @"
+                <div>
+                    <h1>Hello World</h1>
+                    <body foo='bar'>
+                </div>
+                <p>hello</p>
+                </foo>abc";
+            XmlDocument doc = new XmlDocument();
+            XmlElement parent = doc.CreateElement("foo");
+            doc.AppendChild(parent);
+            parent.LoadHtmlFragment(html);
+
+            Console.WriteLine( ToFormattedString(doc));
+
+            // Ensure we are not inserting html, head or body nodes...
+            // And ensure we can load the fragment
+            // And ensure that the </foo> tag does not match our root node...
+            Assert.AreEqual("foo", parent.Name);
+            Assert.AreEqual(3, parent.ChildNodes.Count);
+        }
 
 
         [TestMethod]
@@ -111,6 +152,32 @@ namespace XHtmlKit.Parser.Tests
             Assert.IsTrue(doc.SelectSingleNode("//script/text()").Value.Contains("<table>"));
         }
 
+        [TestMethod]
+        public void Test_FullyQualifyUrls()
+        {
+            string html = @"            
+            <html><body>
+            <a id='1' href='//foobar.com'>hello</a>
+            <a id='2' href='/helloworld.html'>hello</a>
+            <a id='3' href='helloworld.html'>hello</a>
+            <a id='4' href='http://blah.com/helloworld.html'>hello</a>
+            <a id='5' href='../helloworld.html'>hello</a>
+            <a id='6' href='/wiki/Wikipedia:Introduction'>hello</a>
+
+            </body></html>";
+            XmlDocument doc = new XmlDocument();
+            doc.LoadHtml(html, "http://www.foobar.com/products/cat1/someprod.html");
+            Console.WriteLine(doc.OuterXml);
+
+            // Ensure the urls are fully qualified...
+            Assert.AreEqual("http://foobar.com/", doc.SelectSingleNode("//a[@id='1']/@href").Value);
+            Assert.AreEqual("http://www.foobar.com/helloworld.html", doc.SelectSingleNode("//a[@id='2']/@href").Value);
+            Assert.AreEqual("http://www.foobar.com/products/cat1/helloworld.html", doc.SelectSingleNode("//a[@id='3']/@href").Value);
+            Assert.AreEqual("http://blah.com/helloworld.html", doc.SelectSingleNode("//a[@id='4']/@href").Value);
+            Assert.AreEqual("http://www.foobar.com/products/helloworld.html", doc.SelectSingleNode("//a[@id='5']/@href").Value);
+            Assert.AreEqual("http://www.foobar.com/wiki/Wikipedia:Introduction", doc.SelectSingleNode("//a[@id='6']/@href").Value);
+
+        }
 
         [TestMethod]
         public void Test_FormattingTags()

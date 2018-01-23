@@ -58,8 +58,12 @@
       <Name>XHtmlKit</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="SampleHtml\" />
+    <Content Include="SampleHtml\sample1.html" />
+    <Content Include="SampleHtml\sample2.html" />
+    <Content Include="SampleHtml\sample3.html" />
+    <Content Include="SampleHtml\sample4.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

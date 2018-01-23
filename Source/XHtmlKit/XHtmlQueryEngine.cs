@@ -1,8 +1,10 @@
-﻿using System.Net;
+﻿using System.Net.Http;
 using System.Xml;
 using System.Collections;
 using System.Threading.Tasks;
-using XHtmlKit;
+using System.IO;
+using System.Collections.Generic;
+using XHtmlKit.Network;
 
 namespace XHtmlKit.Query
 {
@@ -12,6 +14,23 @@ namespace XHtmlKit.Query
     /// </summary>
     public static class XHtmlQueryEngine
     {
+        private static HttpClient _httpClient;
+        public static HttpClient HttpClient
+        {
+            get
+            {
+                if (_httpClient == null)
+                {
+                    _httpClient = new HttpClient();
+                    _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
+                }
+                return _httpClient;
+            }
+            set
+            {
+                _httpClient = value;
+            }
+        }
 
         /// <summary>
         /// Extracts content from an XHtmlNode
@@ -66,7 +85,7 @@ namespace XHtmlKit.Query
 
                     // Text result - output as text (decode special characters)
                     else if (isText && !wrapInCData)
-                        resultContentNode = ownerDocument.CreateTextNode(WebUtility.HtmlDecode( queryResultNode.Value ).Trim() );
+                        resultContentNode = ownerDocument.CreateTextNode( queryResultNode.Value.Trim() );
 
                     // Element result - wrap in CDATA
                     else if (!isText && wrapInCData)
@@ -91,30 +110,15 @@ namespace XHtmlKit.Query
 
         }
 
-
-        public static async Task<XmlElement> RunQueryOnWebPageAsync(string url, string selectXml, XmlElement output = null, string originatingUrl = null)
+        public static XmlElement SelectOnHtml(string html, string selectQueryXml, XmlElement output = null, string originatingUrl = null, HtmlParser p = null)
         {
-            // Load content from url
-            XmlDocument xhtmlDoc = new XmlDocument();
-            await xhtmlDoc.LoadWebPageAsync(url);
-            return RunQueryOnXHtml(xhtmlDoc, selectXml, output);
-        }
+            HtmlParser parser = (p == null ? HtmlParser.DefaultParser : p);
 
-        public static XmlElement RunQueryOnHtml(string html, string selectXml, XmlElement output = null, string originatingUrl = null)
-        {
             // Load content from html string
             XmlDocument xhtmlDoc = new XmlDocument();
-            xhtmlDoc.LoadHtml(html, originatingUrl);
-            return RunQueryOnXHtml(xhtmlDoc, selectXml, output);
-        }
+            parser.LoadHtml(xhtmlDoc, html, originatingUrl);
 
-        public static XmlElement RunQueryOnXHtml(XmlDocument xhtmlDoc, string selectXml, XmlElement output = null)
-        {
-            // Load query
-            XmlDocument selectDoc = new XmlDocument();
-            selectDoc.LoadXml(selectXml);
-
-            // Create a result element to mount results onto to if necessary
+            // Create a result element to mount results onto if none was supplied
             XmlElement resultElem = output;
             if (resultElem == null)
             {
@@ -123,9 +127,103 @@ namespace XHtmlKit.Query
                 resultDoc.AppendChild(resultElem);
             }
 
+            // Run the query on the XHtml document
+            return SelectOnXHtml(xhtmlDoc, selectQueryXml, resultElem);
+        }
+
+        public static XmlElement SelectOnXHtml(XmlDocument xhtmlDoc, string selectQueryXml, XmlElement output)
+        {
+            // Load query
+            XmlDocument selectDoc = new XmlDocument();
+            selectDoc.LoadXml(selectQueryXml);
+
             // Select content
-            xhtmlDoc.SelectNodes(selectDoc.DocumentElement, resultElem);
+            xhtmlDoc.SelectNodes(selectDoc.DocumentElement, output);
+            return output;
+        }
+
+        public static async Task<XmlDocument> LoadXHtmlDocAsync(string url, HtmlParser parser = null)
+        {
+            XmlDocument xhtmlDoc = new XmlDocument();
+
+            // Determine which parser to use
+            HtmlParser parserToUse = parser == null ? HtmlParser.DefaultParser : parser;
+
+            // Get the Html asynchronously and Parse it into an Xml Document            
+            using (TextReader htmlReader = await HttpClient.GetTextReaderAsync(url))
+                parserToUse.LoadHtml(xhtmlDoc, htmlReader, url);
+
+            return xhtmlDoc;
+        }
+
+        public static async Task<XmlElement> RunSelectAsync(string url, string selectQueryXml, XmlElement outputElement=null, HtmlParser parser = null)
+        {
+            // Create a result element to mount results onto if none was supplied
+            XmlElement resultElem = outputElement;
+            if (resultElem == null)
+            {
+                XmlDocument resultDoc = new XmlDocument();
+                resultElem = resultDoc.CreateElement("results");
+                resultDoc.AppendChild(resultElem);
+            }
+
+            try
+            {
+                // Get the Html asynchronously and Parse it into an Xml Document
+                XmlDocument xhtmlDoc = await LoadXHtmlDocAsync(url, parser);
+
+                // Run the query on the xhtml content, mount onto results
+                SelectOnXHtml(xhtmlDoc, selectQueryXml, resultElem);
+            }
+            catch (System.Exception ex)
+            {                
+                XmlNode errorNode = resultElem.AppendChild(resultElem.OwnerDocument.CreateElement("error"));
+                errorNode.InnerText = ex.Message + (ex.InnerException != null ? " " + ex.InnerException.Message : "");
+            }
+
             return resultElem;
+        }
+
+        public static async Task<XmlElement> RunQueryAsync(string queryXml, HtmlParser parser = null)
+        {
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml(queryXml);
+            return await RunQueryAsync(xmlDoc, parser);
+        }
+
+        public static async Task<XmlElement> RunQueryAsync(XmlDocument queryDoc, HtmlParser parser = null)
+        {
+            // Get the 'select' node, and ensure we are not going to emit a 'select' node in the results
+            XmlElement selectQueryNode = (XmlElement)queryDoc.SelectSingleNode("//query/select");
+            if (selectQueryNode == null)
+            {
+                throw new System.Exception("Invalid query. Missing 'select'.");
+            }
+            selectQueryNode.SetAttribute("emit", "false");
+
+            // Get the list of 'from' nodes. There may be multiple.
+            XmlNodeList fromQueryNodes = queryDoc.SelectNodes("//query/from");
+            if (fromQueryNodes.Count == 0)
+            {
+                throw new System.Exception("Invalid query. Missing 'from'.");
+            }
+
+            // Build the results document with a 'results' root element.
+            XmlDocument retval = new XmlDocument();
+            XmlElement resultNode = retval.CreateElement("results");
+            retval.AppendChild(resultNode);
+
+            // Build a list of query tasks and launch them.
+            List<Task> tasks = new List<Task>();
+            foreach (XmlNode urlNode in fromQueryNodes)
+            {
+                tasks.Add(RunSelectAsync(urlNode.InnerText, selectQueryNode.OuterXml, resultNode, parser));
+            }
+
+            // Await the results...
+            await Task.WhenAll(tasks);
+
+            return retval.DocumentElement;
         }
     }
 }
