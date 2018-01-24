@@ -12,7 +12,7 @@ namespace XHtmlKit.Parser.Tests
     public class HtmlTextReader_Tests
     {
         [TestMethod]
-        public void Test_ReadText()
+        public void ReadText()
         {
             string input;
             HtmlTextReader reader;
@@ -63,7 +63,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
         [TestMethod]
-        public void Test_ReadComment()
+        public void ReadComment()
         {
             string input;
             HtmlTextReader reader;
@@ -137,7 +137,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
         [TestMethod]
-        public void Test_ReadUnquotedAttribute()
+        public void ReadUnquotedAttribute()
         {
             string input;
             HtmlTextReader reader;
@@ -209,7 +209,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
         [TestMethod]
-        public void Test_ReadScript()
+        public void ReadScript()
         {
             string input;
             HtmlTextReader reader;
@@ -230,7 +230,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
         [TestMethod]
-        public void Test_ReadNext()
+        public void ReadNext()
         {
             string input;
             HtmlTextReader reader;
@@ -276,7 +276,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
         [TestMethod]
-        public void Test_ReadToMatch()
+        public void ReadToMatch()
         {
             string input;
             HtmlTextReader reader;
@@ -308,7 +308,7 @@ namespace XHtmlKit.Parser.Tests
         
 
         [TestMethod]
-        public void Test_ReadQuotedAttribute()
+        public void ReadQuotedAttribute()
         {
             string input;
             HtmlTextReader reader;
@@ -379,7 +379,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
         [TestMethod]
-        public void Test_ReadAttrName()
+        public void ReadAttrName()
         {
             string input;
             StringReader sr;
@@ -430,7 +430,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
         [TestMethod]
-        public void Test_ReadAttrNameAndVal()
+        public void ReadAttrNameAndVal()
         {
             string input;
             StringReader sr;
@@ -498,7 +498,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
         [TestMethod]
-        public void Test_ReadAllAttributes()
+        public void ReadAllAttributes()
         {
             string input;
             string output;

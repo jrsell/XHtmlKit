@@ -1,43 +1,32 @@
 ﻿using System.Xml;
 using System.IO;
-//using System.Threading.Tasks;
-//using System.Net.Http;
-//using XHtmlKit.Network;
 
 namespace XHtmlKit
 {
     public static class HtmlParserExtensions
     {
 
-        public static void LoadHtml(this XmlDocument doc, string html, string originatingUrl = null)
+        public static void LoadHtml(this XmlDocument doc, string html, string baseUrl = null)
         {
-            HtmlParser.DefaultParser.LoadHtml(doc, html, originatingUrl);
+            HtmlParser.DefaultParser.LoadHtml(doc, html, baseUrl);
         }
 
-        public static void LoadHtml(this XmlDocument doc, TextReader htmlTextReader, string originatingUrl = null)
+        public static void LoadHtml(this XmlDocument doc, TextReader htmlTextReader, string baseUrl = null)
         {
-            HtmlParser.DefaultParser.LoadHtml(doc, htmlTextReader, originatingUrl);
+            HtmlParser.DefaultParser.LoadHtml(doc, htmlTextReader, baseUrl);
         }
 
-        public static void LoadHtmlFragment(this XmlNode rootNode, string html, string originatingUrl = null)
+        public static void LoadHtmlFragment(this XmlNode rootNode, string html, string baseUrl = null)
         {
-            HtmlParser.DefaultParser.LoadHtmlFragment(rootNode, html, originatingUrl);
+            HtmlParser.DefaultParser.LoadHtmlFragment(rootNode, html, baseUrl);
         }
 
-        public static void LoadHtmlFragment(this XmlNode rootNode, TextReader htmlTextReader, string originatingUrl = null)
+        public static void LoadHtmlFragment(this XmlNode rootNode, TextReader htmlTextReader, string baseUrl = null)
         {
-            HtmlParser.DefaultParser.LoadHtmlFragment(rootNode, htmlTextReader, originatingUrl);
+            HtmlParser.DefaultParser.LoadHtmlFragment(rootNode, htmlTextReader, baseUrl);
         }
 
-        /*
-        public static async Task LoadWebPageAsync(this XmlDocument doc, string url)
-        {
-            using (HttpClient httpClient = new HttpClient())
-            using (TextReader htmlReader = await httpClient.GetTextReaderAsync(url))
-            {
-                HtmlParser.DefaultParser.LoadHtml(doc, htmlReader, url);
-            }
-        }*/
+        
     }
 
 }

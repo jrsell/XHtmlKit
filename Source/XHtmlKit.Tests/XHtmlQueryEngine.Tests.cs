@@ -238,7 +238,13 @@ namespace XHtmlKit.Query.Tests
         }
 
         /// <summary>
-        /// Test putting the xpath in the text of the node rather than in the xpath attribute
+        /// Test putting the xpath in the text of the node rather than in the xpath attribute.
+        /// For example: <row xpath='//div'/> and <row>//div</row> should be the same. The 
+        /// The advantage of putting the xpath in the text, is twofold: 1) for cases where
+        /// you want a filter, you require an extra set of quotes eg: xpath="//div[@class='abc']"
+        /// putting the xpath in the text removes this need, and avoids the requirement for escaping
+        /// quotes in the outer xml. The second rational is that it makes expressing the query in JSON
+        /// much more readable.
         /// </summary>
         [TestMethod]
         public void XpathInTextNode()
@@ -249,7 +255,8 @@ namespace XHtmlKit.Query.Tests
         }
 
         /// <summary>
-        /// Test aggregating multiple results with a common parent
+        /// Test aggregating multiple results with a common parent. This is required
+        /// when we wish to run multiple queries, and have the results aggregated.
         /// </summary>
         [TestMethod]
         public void AggregateResults()
@@ -286,6 +293,10 @@ namespace XHtmlKit.Query.Tests
             Assert.AreEqual(@"<rows><row><p> The quick brown <a href=""www.google.com"">Google &amp; Boogle</a> fox jumped</p></row><row><p> The quick brown <a href=""www.yahoo.com?q=123&amp;v=1"">Yahoo</a> fox jumped</p></row></rows>", results);
         }
 
+        /// <summary>
+        /// A real world example of querying and parsing a web page to extract meaningful
+        /// structured data.
+        /// </summary>
         [TestMethod]
         public async Task ParseThriftyCategoriesTest()
         {
@@ -307,6 +318,10 @@ namespace XHtmlKit.Query.Tests
             Assert.AreEqual(20, resultsDoc.SelectNodes("//category").Count);
         }
 
+        /// <summary>
+        /// The same real-world example, but using the full query
+        /// syntax.
+        /// </summary>
         [TestMethod]
         public async Task QueryThriftyCategoriesTest()
         {
@@ -355,6 +370,12 @@ namespace XHtmlKit.Query.Tests
             Assert.AreEqual(5, resultsDoc.SelectNodes("//product").Count);
         }
 
+        /// <summary>
+        /// A real world query example where one of the url's supplied is 
+        /// invalid. Here we should get two errors and one valid result. 
+        /// The errors should be returned in the XML results, rather than
+        /// be thrown by the call.
+        /// </summary>
         [TestMethod]
         public async Task InvalidUrlTest()
         {
