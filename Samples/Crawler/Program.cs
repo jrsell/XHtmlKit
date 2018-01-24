@@ -21,9 +21,9 @@ namespace Crawler
     class Settings
     {
         public string Url = "http://en.wikipedia.org";
-        public string OutputDir = "../../Output";
+        public string OutputDir = "Output";
         public int Depth = 1;
-        public bool StayOnDomain = true;
+        public string UrlFilter = "";
     }
 
     class Program
@@ -42,7 +42,7 @@ namespace Crawler
 
                 crawlerSettings.Url = (settings.Attributes["Url"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["Url"].Value)) ? settings.Attributes["Url"].Value.Trim() : crawlerSettings.Url;
                 crawlerSettings.Depth = settings.Attributes["Depth"] != null  ?  Convert.ToInt32(settings.Attributes["Depth"].Value ) : crawlerSettings.Depth;
-                crawlerSettings.StayOnDomain = settings.Attributes["StayOnDomain"] != null  ? Convert.ToBoolean(settings.Attributes["StayOnDomain"].Value) : crawlerSettings.StayOnDomain;
+                crawlerSettings.UrlFilter = (settings.Attributes["UrlFilter"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["UrlFilter"].Value)) ? settings.Attributes["UrlFilter"].Value.Trim() : crawlerSettings.UrlFilter;
                 crawlerSettings.OutputDir = (settings.Attributes["OutputDir"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["OutputDir"].Value)) ? settings.Attributes["OutputDir"].Value.Trim() : crawlerSettings.OutputDir;
             }
 
@@ -53,7 +53,7 @@ namespace Crawler
             // Add the root url to the todo list
             urlsToCrawl.Enqueue(new Link { Url = crawlerSettings.Url });
 
-            Console.WriteLine("Crawling: " + crawlerSettings.Url + ", Depth: " + crawlerSettings.Depth + ", OutputDir: " + crawlerSettings.OutputDir + ", StayOnDomain: " + crawlerSettings.StayOnDomain);
+            Console.WriteLine("Crawling: " + crawlerSettings.Url + ", Depth: " + crawlerSettings.Depth + ", OutputDir: " + crawlerSettings.OutputDir + ", UrlFilter: '" + crawlerSettings.UrlFilter + "'");
 
             // Crawl all urls on the 'todo' list
             while (urlsToCrawl.Count > 0)
@@ -84,6 +84,28 @@ namespace Crawler
                 }
 
                 // Save the file to disk
+                if (!string.IsNullOrWhiteSpace(crawlerSettings.OutputDir)) {
+                    string fileName = new Uri(currentUrl.Url.ToLower()).PathAndQuery;
+
+                    // Create a valid file name from the URL
+                    foreach (char c in System.IO.Path.GetInvalidFileNameChars()) {
+                        fileName = fileName.Replace(c.ToString(), "");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(fileName))
+                        fileName = "default";
+
+                    fileName = fileName + ".xml";
+
+                    // Ensure output directory exists
+                    if (!System.IO.Directory.Exists(crawlerSettings.OutputDir))
+                    {
+                        System.IO.Directory.CreateDirectory(crawlerSettings.OutputDir);
+                    }
+
+                    // Save file
+                    xhtmlDoc.Save(crawlerSettings.OutputDir + "\\" + fileName);
+                }
 
                 // Get sub-links from the XHtml
                 var subLinkElems = xhtmlDoc.SelectNodes("//a");
@@ -105,8 +127,8 @@ namespace Crawler
                     Uri subUri = new Uri(sublink.ToLower());
                     Uri baseUri = new Uri(crawlerSettings.Url.ToLower());
 
-                    // Don't add links that are off the Domain
-                    if (crawlerSettings.StayOnDomain && (subUri.Host != baseUri.Host))
+                    // Don't add links that don't match the UrlFilter
+                    if (!string.IsNullOrWhiteSpace(crawlerSettings.UrlFilter) && (!sublink.Contains(crawlerSettings.UrlFilter)) )
                         continue;
 
                     // Don't add links that we have already crawled...
