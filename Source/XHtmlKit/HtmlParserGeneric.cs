@@ -5,23 +5,7 @@ using System.IO;
 
 namespace XHtmlKit
 {
-    public class HtmlStreamParser : HtmlParser
-    {
-        public override void LoadHtml(XmlDocument doc, TextReader htmlTextReader, string baseUrl = null)
-        {
-            XmlDomBuilder dom = new XmlDomBuilder(doc);
-            HtmlStreamParserGeneric<XmlNode> parser = new HtmlStreamParserGeneric<XmlNode>();
-            parser.LoadXHtml(dom, htmlTextReader, baseUrl, InsersionMode.BeforeHtml);
-        }
-
-        public override void LoadHtmlFragment(XmlNode rootNode, TextReader htmlTextReader, string baseUrl = null)
-        {
-            XmlDomBuilder dom = new XmlDomBuilder(rootNode);
-            HtmlStreamParserGeneric<XmlNode> parser = new HtmlStreamParserGeneric<XmlNode>();
-            parser.LoadXHtml(dom, htmlTextReader, baseUrl, InsersionMode.InBody);
-        }
-    }
-
+ 
     public enum InsersionMode
     {
         BeforeHtml,
@@ -29,10 +13,9 @@ namespace XHtmlKit
         InHead,
         InBody
     }
-
-    public class HtmlStreamParserGeneric<DomNode>
+    
+    public class HtmlParserGeneric<DomNode>
     {
-
         private enum TagAttributes
         {
             None = 0,
@@ -86,7 +69,7 @@ namespace XHtmlKit
             return isHeadTag;
         }
 
-        public void LoadXHtml(DomBuilder<DomNode> dom, TextReader htmlTextReader, string baseUrl = null, InsersionMode mode = InsersionMode.BeforeHtml)
+        public void Parse(DomBuilder<DomNode> dom, TextReader htmlTextReader, string baseUrl = null, InsersionMode mode = InsersionMode.BeforeHtml)
         {
 
             // Create HtmlTextReader for html tag tokenization

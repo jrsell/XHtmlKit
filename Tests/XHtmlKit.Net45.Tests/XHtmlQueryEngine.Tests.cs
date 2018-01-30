@@ -53,7 +53,7 @@ namespace XHtmlKit.Tests
         {
             // Transfer content to XmlDoc...
             XmlDocument xhtmlDoc = new XmlDocument();
-            HtmlParser.DefaultParser.LoadHtml(xhtmlDoc, new StringReader(_testHTML));
+            HtmlParser.DefaultParser.Parse(xhtmlDoc, new StringReader(_testHTML));
             Assert.AreEqual("html", xhtmlDoc.DocumentElement.Name);
             Console.WriteLine(xhtmlDoc.OuterXml);
         }
@@ -221,7 +221,7 @@ namespace XHtmlKit.Tests
         [Test]
         public void XML_Characters_InResults()
         {
-            XmlDocument doc = XHtmlDocument.Load(_testHTML);
+            XmlDocument doc = XHtmlLoader.Load(_testHTML);
             Console.WriteLine(ToFormattedString(doc));
 
             string query = "<row xpath='//body/div/@class'></row>";

@@ -92,7 +92,7 @@ namespace XHtmlKit.Network.Tests
             {                
                 s1 = reader.ReadToEnd();
             }
-            XmlDocument doc1 = XHtmlDocument.Load(s1);
+            XmlDocument doc1 = XHtmlLoader.Load(s1);
             string title1 = doc1.SelectSingleNode("//title/text()").InnerText;
 
             Console.WriteLine("Compared: " + url + ", len: " + s1.Length + ", title: " + title1);

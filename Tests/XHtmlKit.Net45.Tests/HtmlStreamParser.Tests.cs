@@ -4,6 +4,7 @@ using System.IO;
 using XHtmlKit;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace XHtmlKit.Parser.Tests
 {
@@ -21,6 +22,15 @@ namespace XHtmlKit.Parser.Tests
             return sb.ToString();
         }
 
+        public static void LinqCompare(XmlDocument doc, string html, string baseUrl=null)
+        {
+            // Linq check
+            XDocument xdoc = Linq.XHtmlLoader.Load(html, baseUrl);
+            string xdocOuterXml = xdoc.ToString(SaveOptions.DisableFormatting);
+            Console.WriteLine(xdocOuterXml);
+            Assert.AreEqual(doc.OuterXml, xdocOuterXml);
+        }
+
         /// <summary>
         /// Basic html document.
         /// </summary>
@@ -31,8 +41,13 @@ namespace XHtmlKit.Parser.Tests
             <html><body>
             <h1>Hello World</h1>
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
-            Console.WriteLine(doc.OuterXml);
+
+            XmlDocument doc = XHtmlLoader.Load(html);
+            string doc1 = doc.OuterXml;
+            Console.WriteLine(doc1);
+
+            // Linq check
+            LinqCompare(doc, html);
         }
 
         /// <summary>
@@ -45,11 +60,14 @@ namespace XHtmlKit.Parser.Tests
             <html><body>
             <h1>Hello World</h1><p> para <head>somehead</head> end para </p>
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the <head> inside the body tag is ingnored
             Assert.IsNull(doc.SelectSingleNode("//body/head"));
+
+            // Linq check
+            LinqCompare(doc, html);
         }
 
         /// <summary>
@@ -67,13 +85,16 @@ namespace XHtmlKit.Parser.Tests
                 <body>
             <h1>Hello World</h1>
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the text under meta ignored, since meta is a self-closing tag
             Assert.IsNull(doc.SelectSingleNode("//head/meta/a"));
             // The <a> tag should go under the body
             Assert.IsNotNull(doc.SelectSingleNode("//body/a"));
+
+            // Linq check
+            LinqCompare(doc, html);
 
         }
 
@@ -87,12 +108,14 @@ namespace XHtmlKit.Parser.Tests
                     <body foo='bar'>
                 </div></html>";
             XmlDocument doc = new XmlDocument();
-            HtmlParser.DefaultParser.LoadHtmlFragment(doc, new StringReader(html));
+            HtmlParser.DefaultParser.ParseFragment(doc, new StringReader(html));
 
             Console.WriteLine(doc.OuterXml);
 
             // Ensure we are not inserting html, head or body nodes...
             Assert.AreEqual("div", doc.DocumentElement.Name);
+
+
         }
 
         [Test]
@@ -108,7 +131,7 @@ namespace XHtmlKit.Parser.Tests
             XmlDocument doc = new XmlDocument();
             XmlElement parent = doc.CreateElement("foo");
             doc.AppendChild(parent);
-            HtmlParser.DefaultParser.LoadHtmlFragment(parent, new StringReader(html));
+            HtmlParser.DefaultParser.ParseFragment(parent, new StringReader(html));
 
             Console.WriteLine( ToFormattedString(doc));
 
@@ -134,10 +157,14 @@ namespace XHtmlKit.Parser.Tests
                     <h1>Hello World</h1>
                 </body>
             </html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
             Console.WriteLine(doc.OuterXml);
 
             Assert.AreEqual("foo", doc.SelectSingleNode("//body").Attributes["class"].Value);
+
+            // Linq check
+            LinqCompare(doc, html);
+
         }
 
         [Test]
@@ -153,11 +180,15 @@ namespace XHtmlKit.Parser.Tests
                 ga('send', 'pageview<table>');
             </script>
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the </body> inside the script is treated as RCData...
             Assert.IsTrue(doc.SelectSingleNode("//script/text()").Value.Contains("<table>"));
+
+            // Linq check
+            LinqCompare(doc, html);
+
         }
 
         [Test]
@@ -170,11 +201,15 @@ namespace XHtmlKit.Parser.Tests
             <body>
             <h1>Hello World</h1>
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the </TITLE> match is case insenstive...
             Assert.AreEqual("This is a Title!", doc.SelectSingleNode("//title/text()").Value);
+
+            // Linq check
+            LinqCompare(doc, html);
+
         }
 
         /// <summary>
@@ -194,7 +229,8 @@ namespace XHtmlKit.Parser.Tests
             <a id='6' href='/wiki/Wikipedia:Introduction'>hello</a>
 
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html, "http://www.foobar.com/products/cat1/someprod.html");
+            string baseUrl = "http://www.foobar.com/products/cat1/someprod.html";
+            XmlDocument doc = XHtmlLoader.Load(html, baseUrl);
             
             Console.WriteLine(doc.OuterXml);
 
@@ -205,6 +241,9 @@ namespace XHtmlKit.Parser.Tests
             Assert.AreEqual("http://blah.com/helloworld.html", doc.SelectSingleNode("//a[@id='4']/@href").Value);
             Assert.AreEqual("http://www.foobar.com/products/helloworld.html", doc.SelectSingleNode("//a[@id='5']/@href").Value);
             Assert.AreEqual("http://www.foobar.com/wiki/Wikipedia:Introduction", doc.SelectSingleNode("//a[@id='6']/@href").Value);
+
+            // Linq check
+            LinqCompare(doc, html, baseUrl);
 
         }
 
@@ -219,11 +258,15 @@ namespace XHtmlKit.Parser.Tests
             <h1>Hello World</h1>
             Some text <b><i>italics</b></i>
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
             Console.WriteLine(doc.OuterXml);
 
             // The <b> tag should contain the <i> tag
             Assert.AreEqual("<b><i>italics</i></b>", doc.SelectSingleNode("//b").OuterXml);
+
+            // Linq check
+            LinqCompare(doc, html);
+
         }
 
         /// <summary>
@@ -248,8 +291,12 @@ namespace XHtmlKit.Parser.Tests
 		            <a id=11 class=red/>class='red/'</a>
 	            </body>
             </html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
             Console.WriteLine(ToFormattedString(doc));
+
+            // Linq check
+            LinqCompare(doc, html);
+
         }
 
         /// <summary>
@@ -268,12 +315,16 @@ namespace XHtmlKit.Parser.Tests
                 </p>
             </body>
             </html>some after text";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the comment shows up at the beginning, and the text at the end...
             Assert.IsTrue(doc.FirstChild.NodeType == XmlNodeType.Comment);
             Assert.AreEqual("some after text", doc.SelectSingleNode("//body").LastChild.InnerText);
+
+            // Linq check
+            LinqCompare(doc, html);
+
         }
 
         /// <summary>
@@ -288,7 +339,7 @@ namespace XHtmlKit.Parser.Tests
             <h1>Hello World</h1>
             Some_&nbsp;_text > hello &gt; &copy; &#169; <b><i>italics</b></i>
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
 
             Console.WriteLine(ToFormattedString(doc));
 
@@ -296,6 +347,9 @@ namespace XHtmlKit.Parser.Tests
             Assert.IsTrue(doc.DocumentElement.Name == "html");
             Assert.IsTrue(doc.DocumentElement.FirstChild.Name == "head");
             Assert.IsTrue(doc.DocumentElement.FirstChild.FirstChild.Name == "title");
+
+            // Linq check
+            LinqCompare(doc, html);
 
         }
 
@@ -309,7 +363,7 @@ namespace XHtmlKit.Parser.Tests
             <html lang='en'><body>
             <h1>Hello World</h1><html lang='fr' style='green'>
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
 
             Console.WriteLine(ToFormattedString(doc));
 
@@ -319,6 +373,9 @@ namespace XHtmlKit.Parser.Tests
             Assert.IsTrue(doc.DocumentElement.Name == "html");
             Assert.AreEqual("en", doc.DocumentElement.Attributes["lang"].Value);
             Assert.AreEqual("green", doc.DocumentElement.Attributes["style"].Value);
+
+            // Linq check
+            LinqCompare(doc, html);
 
         }
 
@@ -336,7 +393,7 @@ namespace XHtmlKit.Parser.Tests
             Some text <br> Some more text <img src='foobar.jpg'> more text <hr><a>foo</a>
             <p/> non self-closing </p>
             </body></html>";
-            XmlDocument doc = XHtmlDocument.Load(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
 
             Console.WriteLine(doc.OuterXml);
 
