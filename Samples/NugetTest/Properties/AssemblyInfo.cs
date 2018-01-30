@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("XHtmlKit")]
+[assembly: AssemblyTitle("NugetTest")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("XHtmlKit")]
+[assembly: AssemblyProduct("NugetTest")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("56ca0aba-f68c-4948-b1b4-cd57ccab4e9b")]
+[assembly: Guid("54143bf0-95d4-464e-a544-5bfbcb8cf4fb")]
 
 // Version information for an assembly consists of the following four values:
 //

@@ -1,4 +1,6 @@
-﻿using System.Net.Http;
+﻿#if !net20 
+
+using System.Net.Http;
 using System.Xml;
 using System.Collections;
 using System.Threading.Tasks;
@@ -6,7 +8,7 @@ using System.IO;
 using System.Collections.Generic;
 using XHtmlKit.Network;
 
-namespace XHtmlKit.Query
+namespace XHtmlKit
 {
     /// <summary>
     /// Adds extensions to the XmlDocument class for querying the document
@@ -227,3 +229,4 @@ namespace XHtmlKit.Query
         }
     }
 }
+#endif

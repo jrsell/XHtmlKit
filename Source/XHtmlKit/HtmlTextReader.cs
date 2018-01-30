@@ -166,7 +166,7 @@ namespace XHtmlKit
                 }
 
                 // Matched the last char 
-                if (c == needle[len - 1])
+                if (char.ToLowerInvariant((char)c) == char.ToLowerInvariant(needle[len - 1]))
                 {
                     int matches = 1;
 

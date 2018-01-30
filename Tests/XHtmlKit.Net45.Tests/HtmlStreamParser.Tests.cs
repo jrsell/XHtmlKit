@@ -1,12 +1,12 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using XHtmlKit;
 using System.Threading.Tasks;
 using System.Xml;
 
 namespace XHtmlKit.Parser.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class HtmlStreamParser_Tests
     {
         public static string ToFormattedString(XmlDocument doc)
@@ -23,7 +23,7 @@ namespace XHtmlKit.Parser.Tests
         /// <summary>
         /// Basic html document.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void HelloWorldBasicTest()
         {
             string html = @"
@@ -31,14 +31,14 @@ namespace XHtmlKit.Parser.Tests
             <h1>Hello World</h1>
             </body></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
             Console.WriteLine(doc.OuterXml);
         }
 
         /// <summary>
         /// 'head' tags found inside the 'body' should be ignored.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void HeadTagInsideBodyTag()
         {
             string html = @"
@@ -46,7 +46,7 @@ namespace XHtmlKit.Parser.Tests
             <h1>Hello World</h1><p> para <head>somehead</head> end para </p>
             </body></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the <head> inside the body tag is ingnored
@@ -57,7 +57,7 @@ namespace XHtmlKit.Parser.Tests
         /// Since 'meta' tags are self-closing, and 'a' tags do not belong in the 
         /// 'head', the 'a' should get inserted in the body.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void HeadTagWithNestedTags()
         {
             string html = @"
@@ -69,7 +69,7 @@ namespace XHtmlKit.Parser.Tests
             <h1>Hello World</h1>
             </body></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the text under meta ignored, since meta is a self-closing tag
@@ -79,7 +79,7 @@ namespace XHtmlKit.Parser.Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void LoadHtmlFragment()
         {
             string html = @"
@@ -89,7 +89,7 @@ namespace XHtmlKit.Parser.Tests
                     <body foo='bar'>
                 </div></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtmlFragment(html);
+            HtmlParser.DefaultParser.LoadHtmlFragment(doc, html);
 
             Console.WriteLine(doc.OuterXml);
 
@@ -97,7 +97,7 @@ namespace XHtmlKit.Parser.Tests
             Assert.AreEqual("div", doc.DocumentElement.Name);
         }
 
-        [TestMethod]
+        [Test]
         public void LoadHtmlFragmentInSubElem()
         {
             string html = @"
@@ -110,7 +110,7 @@ namespace XHtmlKit.Parser.Tests
             XmlDocument doc = new XmlDocument();
             XmlElement parent = doc.CreateElement("foo");
             doc.AppendChild(parent);
-            parent.LoadHtmlFragment(html);
+            HtmlParser.DefaultParser.LoadHtmlFragment(parent, html);
 
             Console.WriteLine( ToFormattedString(doc));
 
@@ -124,7 +124,7 @@ namespace XHtmlKit.Parser.Tests
         /// <summary>
         /// Attributes should be possible on the body tag
         /// </summary>
-        [TestMethod]
+        [Test]
         public void BodyTagwithAttributes()
         {
             string html = @"
@@ -137,13 +137,13 @@ namespace XHtmlKit.Parser.Tests
                 </body>
             </html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
             Console.WriteLine(doc.OuterXml);
 
             Assert.AreEqual("foo", doc.SelectSingleNode("//body").Attributes["class"].Value);
         }
 
-        [TestMethod]
+        [Test]
         public void ScriptRCDataParsing()
         {
             string html = @"            
@@ -157,18 +157,36 @@ namespace XHtmlKit.Parser.Tests
             </script>
             </body></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the </body> inside the script is treated as RCData...
             Assert.IsTrue(doc.SelectSingleNode("//script/text()").Value.Contains("<table>"));
         }
 
+        [Test]
+        public void TitleRCDataParsingCaps()
+        {
+            string html = @"            
+            <html><head>
+                <title>This is a Title!</TITLE>
+                </head>
+            <body>
+            <h1>Hello World</h1>
+            </body></html>";
+            XmlDocument doc = new XmlDocument();
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
+            Console.WriteLine(doc.OuterXml);
+
+            // Ensure the </TITLE> match is case insenstive...
+            Assert.AreEqual("This is a Title!", doc.SelectSingleNode("//title/text()").Value);
+        }
+
         /// <summary>
         /// When you supply a 'baseUrl' parameter, the parser should fully-qualify
         /// Urls... This test supplies a number of different Url formats.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void FullyQualifyUrls()
         {
             string html = @"            
@@ -182,7 +200,7 @@ namespace XHtmlKit.Parser.Tests
 
             </body></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html, "http://www.foobar.com/products/cat1/someprod.html");
+            HtmlParser.DefaultParser.LoadHtml(doc, html, "http://www.foobar.com/products/cat1/someprod.html");
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the urls are fully qualified...
@@ -198,7 +216,7 @@ namespace XHtmlKit.Parser.Tests
         /// <summary>
         /// Look at mis-ordered formatting tags
         /// </summary>
-        [TestMethod]
+        [Test]
         public void FormattingTags()
         {
             string html = @"            
@@ -207,7 +225,7 @@ namespace XHtmlKit.Parser.Tests
             Some text <b><i>italics</b></i>
             </body></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
             Console.WriteLine(doc.OuterXml);
 
             // The <b> tag should contain the <i> tag
@@ -217,7 +235,7 @@ namespace XHtmlKit.Parser.Tests
         /// <summary>
         /// A number of cases for weird or malformed html attributes.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void AttributeParsing()
         {
             string html = @"            
@@ -237,14 +255,14 @@ namespace XHtmlKit.Parser.Tests
 	            </body>
             </html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
             Console.WriteLine(ToFormattedString(doc));
         }
 
         /// <summary>
         /// Test putting fragments before and after the html tags. 
         /// </summary>
-        [TestMethod]
+        [Test]
         public void BeforeAndAfterFragments()
         {
             string html = @"
@@ -258,7 +276,7 @@ namespace XHtmlKit.Parser.Tests
             </body>
             </html>some after text";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the comment shows up at the beginning, and the text at the end...
@@ -270,7 +288,7 @@ namespace XHtmlKit.Parser.Tests
         /// An html fragment should still parse into a proper html document.
         /// Ensure that 'head', and 'body' are properly constructed.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void NoOuterHtmlTag()
         {
             string html = @"
@@ -279,7 +297,7 @@ namespace XHtmlKit.Parser.Tests
             Some_&nbsp;_text > hello &gt; &copy; &#169; <b><i>italics</b></i>
             </body></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
 
             Console.WriteLine(ToFormattedString(doc));
 
@@ -293,7 +311,7 @@ namespace XHtmlKit.Parser.Tests
         /// <summary>
         /// Ensure that the 'html' tag can have attributes...
         /// </summary>
-        [TestMethod]
+        [Test]
         public void HtmlTagWithAttributes()
         {
             string html = @"
@@ -301,7 +319,7 @@ namespace XHtmlKit.Parser.Tests
             <h1>Hello World</h1><html lang='fr' style='green'>
             </body></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
 
             Console.WriteLine(ToFormattedString(doc));
 
@@ -319,7 +337,7 @@ namespace XHtmlKit.Parser.Tests
         /// ensure that a non self-closing tag, such as '<p/>' does not
         /// actually close.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void SelfClosingTags()
         {
             string html = @"           
@@ -329,7 +347,7 @@ namespace XHtmlKit.Parser.Tests
             <p/> non self-closing </p>
             </body></html>";
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            HtmlParser.DefaultParser.LoadHtml(doc, html);
 
             Console.WriteLine(doc.OuterXml);
 

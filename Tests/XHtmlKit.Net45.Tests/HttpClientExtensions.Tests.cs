@@ -1,15 +1,15 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using System.IO;
-using System.Text;
 using System.Xml;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using XHtmlKit;
 
 namespace XHtmlKit.Network.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class HttpClientExtensions_Tests
     {
         private static HttpClient _client;
@@ -25,41 +25,86 @@ namespace XHtmlKit.Network.Tests
             }
         }
 
-        /// <summary>
-        /// Ensure that using HttpClient.GetTextReaderAsync()
-        /// returns the same number of characters as using 
-        /// HttpClient.GetStringAsync()... This should be the case if
-        /// the two are detecting the Encoding the same way...
-        /// </summary>
-        /// <returns></returns>
-        [TestMethod]
-        public async Task TestDownloadMethodConsistency()
+        
+        [Test]
+        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        public async Task DetectEncoding01_iso_8859_1()
         {
-            string[] urls = new string[] {
-                "http://Namazu.org",
-                "http://Brockenwheels.com",
-                "http://Collabtech.org",
-                "http://Wda.jp",
-                "http://www.Cruillaconnecta.cat",
-                "http://Caninechronicleshowcalendar.com"
-            };
-
-            foreach (string url in urls)
-            {
-                await TestGetTextReaderAsync_ForEncoding(url);
-            }
+            // ISO-8859-1: Example where the headers don't provide the encoding... The encoding should be found in the meta charset...
+            await TestGetTextReaderAsync_ForEncoding("http://www.orange.fr/", "Orange : téléphones, forfaits, Internet, actualité, sport, video");
         }
 
-        public async Task TestGetTextReaderAsync_ForEncoding(string url)
+        [Test]
+        public async Task DetectEncoding02_windows_1251()
         {
+            // Windows-1251   ... note this page also has 'windows-1251' charset defined in meta charset...
+            await TestGetTextReaderAsync_ForEncoding("http://kinozal.tv/", "Торрент трекер Кинозал.ТВ");
+        }
+
+        [Test]
+        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        public async Task DetectEncoding03_shift_jis()
+        {
+            // Shift JIS    (shift_jis)... an example where the encoding does not come out of the headers or the BOM...
+            await TestGetTextReaderAsync_ForEncoding("http://www.itmedia.co.jp/", "IT総合情報ポータル「ITmedia」Home");
+        }
+
+        [Test]
+        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        public async Task DetectEncoding04_Windows_1252()
+        {
+            // Windows-1252    
+            await TestGetTextReaderAsync_ForEncoding("https://www.usps.com/", "Error... no charset in headers...");
+        }
+
+        [Test]
+        public async Task DetectEncoding05_GB2312()
+        {
+            // GB2312   
+            await TestGetTextReaderAsync_ForEncoding("http://www.qq.com/", "腾讯首页");
+        }
+
+        [Test]
+        public async Task DetectEncoding06_EUC_KR()
+        {
+            // EUC-KR
+            await TestGetTextReaderAsync_ForEncoding("http://gmarket.co.kr/", "G마켓 - 쇼핑을 다 담다.");
+        }
+        
+        [Test]
+        public async Task DetectEncoding07_EUC_JP()
+        {
+            // EUC-JP
+            await TestGetTextReaderAsync_ForEncoding("https://www.rakuten.co.jp/", "【楽天市場】Shopping is Entertainment! ： インターネット最大級の通信販売、通販オンラインショッピングコミュニティ");
+        }
+
+        public async Task TestGetTextReaderAsync_ForEncoding(string url, string expectedTitle)
+        {
+            // Method 1 - use GetStringAsync() which does encoding detection...
+            //string s2 = await HttpClient.GetStringAsync(url);
+            //XmlDocument doc2 = new XmlDocument();
+            //doc2.LoadHtml(s2);
+            //string title2 = doc2.SelectSingleNode("//title/text()").InnerText;
+
+            // Method 2 - use our GetTextReaderAsync() which also does encoding detetion...
             string s1;
             using (TextReader reader = await HttpClient.GetTextReaderAsync(url))
-            {
+            {                
                 s1 = reader.ReadToEnd();
             }
-            string s2 = await HttpClient.GetStringAsync(url);
-            Assert.AreEqual(s1.Length, s2.Length);
-            Console.WriteLine("Compared: " + url + ", len: " + s1.Length);
+            XmlDocument doc1 = XHtmlDocument.Load(s1);
+            string title1 = doc1.SelectSingleNode("//title/text()").InnerText;
+
+            Console.WriteLine("Compared: " + url + ", len: " + s1.Length + ", title: " + title1);
+
+            // Compare the titles of the pages to see if the encoding is picking up consistently between 
+            // GetStringAsync and GetTextReaderAsync
+            Assert.AreEqual(expectedTitle, title1);
+
+            // Sanity check - compare against what we get from GetStringAsync()...
+            // Assert.AreEqual(title2, title1);
+
+            //Assert.AreEqual(s1.Length, s2.Length);
         }
 
         /// <summary>

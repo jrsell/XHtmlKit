@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using XHtmlKit;
 using System.IO;
 using System.Text;
@@ -8,10 +8,10 @@ using System.Collections.Generic;
 
 namespace XHtmlKit.Parser.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class HtmlTextReader_Tests
     {
-        [TestMethod]
+        [Test]
         public void ReadText()
         {
             string input;
@@ -62,7 +62,7 @@ namespace XHtmlKit.Parser.Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void ReadComment()
         {
             string input;
@@ -136,7 +136,7 @@ namespace XHtmlKit.Parser.Tests
             Assert.AreEqual("-Hello comment-", output);
         }
 
-        [TestMethod]
+        [Test]
         public void ReadUnquotedAttribute()
         {
             string input;
@@ -208,7 +208,7 @@ namespace XHtmlKit.Parser.Tests
             return toks.ToArray();
         }
 
-        [TestMethod]
+        [Test]
         public void ReadScript()
         {
             string input;
@@ -229,7 +229,7 @@ namespace XHtmlKit.Parser.Tests
             Assert.AreEqual(ParseState.Done, reader.ParseState);
         }
 
-        [TestMethod]
+        [Test]
         public void ReadNext()
         {
             string input;
@@ -275,7 +275,7 @@ namespace XHtmlKit.Parser.Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void ReadToMatch()
         {
             string input;
@@ -307,7 +307,7 @@ namespace XHtmlKit.Parser.Tests
 
         
 
-        [TestMethod]
+        [Test]
         public void ReadQuotedAttribute()
         {
             string input;
@@ -378,7 +378,7 @@ namespace XHtmlKit.Parser.Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void ReadAttrName()
         {
             string input;
@@ -429,7 +429,7 @@ namespace XHtmlKit.Parser.Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void ReadAttrNameAndVal()
         {
             string input;
@@ -497,7 +497,7 @@ namespace XHtmlKit.Parser.Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void ReadAllAttributes()
         {
             string input;
@@ -543,7 +543,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
         /*
-        [TestMethod]
+        [Test]
         public void Test4_ReadTag()
         {
             string input;

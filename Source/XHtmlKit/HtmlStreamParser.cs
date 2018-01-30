@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.IO;
-using System.Net;
 
 namespace XHtmlKit
 {
@@ -117,7 +116,7 @@ namespace XHtmlKit
 
                 // Read the next token. Ignore empty tokens
                 string tok = reader.ReadNext();
-                if (string.IsNullOrWhiteSpace(tok))
+                if (IsNullOrWhiteSpace(tok))
                     continue;
 
                 // Find the insertion point for the token based on our mode 
@@ -214,7 +213,7 @@ namespace XHtmlKit
 
                     case ParseState.Text:
                         // Decode the text, to convert all encoded values (eg: '&gt;' to '>')
-                        string textContent = WebUtility.HtmlDecode(tok);
+                        string textContent = HtmlDecode(tok);
                         currNode.AppendChild(doc.CreateTextNode(textContent)); 
                         break;
                     
@@ -343,7 +342,7 @@ namespace XHtmlKit
                         continue;
 
                     // Values can have html encodings - we want them decoded 
-                    string attrValue = WebUtility.HtmlDecode(tok);
+                    string attrValue = HtmlDecode(tok);
 
                     // See if we want to be fully-qualifying UrlAttributes
                     if (  originatingUrl != null &&
@@ -362,7 +361,28 @@ namespace XHtmlKit
                 // The reader is now past the tag, so we are done adding attributes
                 break;
             }
+            
         }
 
+        private static string HtmlDecode(string htmlText)
+        {
+#if net20 || net35
+            return System.Web.HttpUtility.HtmlDecode(htmlText);
+#else
+            return System.Net.WebUtility.HtmlDecode(htmlText);
+#endif
+        }
+
+        private static bool IsNullOrWhiteSpace(String value)
+        {
+            if (value == null) return true;
+
+            for (int i = 0; i < value.Length; i++)
+            {
+                if (!Char.IsWhiteSpace(value[i])) return false;
+            }
+
+            return true;
+        }
     }
 }

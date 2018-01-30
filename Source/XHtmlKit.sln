@@ -1,11 +1,14 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XHtmlKit", "XHtmlKit\XHtmlKit.csproj", "{56CA0ABA-F68C-4948-B1B4-CD57CCAB4E9B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XHtmlKit", "XHtmlKit\XHtmlKit.csproj", "{9BEEE864-D212-4922-B190-2224F3205909}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XHtmlKit.Tests", "XHtmlKit.Tests\XHtmlKit.Tests.csproj", "{6DF51B34-DB07-4FD3-A65E-22FDE88BE613}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XHtmlKit.Net45.Tests", "..\Tests\XHtmlKit.Net45.Tests\XHtmlKit.Net45.Tests.csproj", "{698BB032-0530-4952-973C-078FBF73DD36}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XHtmlKit.Net20.Tests", "..\Tests\XHtmlKit.Net20.Tests\XHtmlKit.Net20.Tests.csproj", "{A216B5CB-4668-4AA3-A4B7-2BA55A03A560}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XHtmlKit.NetCoreApp1.0.Tests", "..\Tests\XHtmlKit.NetCoreApp1.0.Tests\XHtmlKit.NetCoreApp1.0.Tests.csproj", "{75BE18C5-CE24-4FA0-B19D-8896AA310B64}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +16,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{56CA0ABA-F68C-4948-B1B4-CD57CCAB4E9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{56CA0ABA-F68C-4948-B1B4-CD57CCAB4E9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{56CA0ABA-F68C-4948-B1B4-CD57CCAB4E9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{56CA0ABA-F68C-4948-B1B4-CD57CCAB4E9B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6DF51B34-DB07-4FD3-A65E-22FDE88BE613}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6DF51B34-DB07-4FD3-A65E-22FDE88BE613}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6DF51B34-DB07-4FD3-A65E-22FDE88BE613}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6DF51B34-DB07-4FD3-A65E-22FDE88BE613}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BEEE864-D212-4922-B190-2224F3205909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BEEE864-D212-4922-B190-2224F3205909}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BEEE864-D212-4922-B190-2224F3205909}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BEEE864-D212-4922-B190-2224F3205909}.Release|Any CPU.Build.0 = Release|Any CPU
+		{698BB032-0530-4952-973C-078FBF73DD36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{698BB032-0530-4952-973C-078FBF73DD36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{698BB032-0530-4952-973C-078FBF73DD36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{698BB032-0530-4952-973C-078FBF73DD36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A216B5CB-4668-4AA3-A4B7-2BA55A03A560}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A216B5CB-4668-4AA3-A4B7-2BA55A03A560}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A216B5CB-4668-4AA3-A4B7-2BA55A03A560}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A216B5CB-4668-4AA3-A4B7-2BA55A03A560}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75BE18C5-CE24-4FA0-B19D-8896AA310B64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75BE18C5-CE24-4FA0-B19D-8896AA310B64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75BE18C5-CE24-4FA0-B19D-8896AA310B64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75BE18C5-CE24-4FA0-B19D-8896AA310B64}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

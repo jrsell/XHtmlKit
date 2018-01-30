@@ -1,11 +1,12 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using System.Xml;
 using System.Threading.Tasks;
+using XHtmlKit;
 
-namespace XHtmlKit.Query.Tests
+namespace XHtmlKit.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class XHtmlQueryEngine_Tests
     {
         public XHtmlQueryEngine_Tests()
@@ -46,18 +47,18 @@ namespace XHtmlKit.Query.Tests
         /// See if we can use the HtmlDocument for parsing, and transfer it over to
         /// an XmlDocument for querying...
         /// </summary>
-        [TestMethod]
+        [Test]
         public void TestHtml2Xml()
         {
             // Transfer content to XmlDoc...
             XmlDocument xhtmlDoc = new XmlDocument();
-            xhtmlDoc.LoadHtml(_testHTML);
+            HtmlParser.DefaultParser.LoadHtml(xhtmlDoc, _testHTML);
             Assert.AreEqual("html", xhtmlDoc.DocumentElement.Name);
             Console.WriteLine(xhtmlDoc.OuterXml);
         }
 
 
-        [TestMethod]
+        [Test]
         public void AttributeEncode()
         {
             XmlDocument doc = new XmlDocument();
@@ -74,7 +75,7 @@ namespace XHtmlKit.Query.Tests
             Assert.AreEqual("<root class=\"hello-world\" />", doc.OuterXml);
         }
 
-        [TestMethod]
+        [Test]
         public void SelectNodesTest01()
         {
             string query = "<rows><row xpath='//a'><title xpath='./text()'/><link xpath='./@href'/></row></rows>";
@@ -82,7 +83,7 @@ namespace XHtmlKit.Query.Tests
             Assert.AreEqual("<rows><row><title>Google &amp; Boogle</title><link>www.google.com</link></row><row><title>Yahoo</title><link>www.yahoo.com?q=123&amp;v=1</link></row></rows>", results);
         }
 
-        [TestMethod]
+        [Test]
         public void DecodeRequired()
         {
             string htmlWithDecodeRequired = "<html><title>Metalogix | Content Migration & Management for O365 & SharePoint</title><a class='hello&#45;world'>My Results</a><a class='hello world'>def</a> </html>";
@@ -91,7 +92,7 @@ namespace XHtmlKit.Query.Tests
             Assert.AreEqual("<foobar>My Results</foobar>", results);
         }
 
-        [TestMethod]
+        [Test]
         public void DecodeRequired2()
         {
             string htmlWithDecodeRequired = "<html><title>Metalogix | Content Migration & Management for O365 & SharePoint</title><a class='hello&#45;world'>My Results</a><a class='hello world'>def</a> </html>";
@@ -103,7 +104,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// We should be able to supply the xpath in the text node, as opposed to the xpath attribute
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XpathInText()
         {
             string query = "<foobar>//body <subquery xpath='.//a/text()'/></foobar>";
@@ -114,7 +115,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Test wrapping the output in a CDATA
         /// </summary>
-        [TestMethod]
+        [Test]
         public void Text_CDATA()
         {
             string query = "<rows><row xpath='//a'><title cdata='true' xpath='./text()'/><link xpath='./@href'/></row></rows>";
@@ -125,7 +126,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Result is an anchor text node, not output in CDATA. The special characters should be escaped here.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void Text_not_CDATA()
         {
             string query = "<anchorText xpath='//a/text()' />";
@@ -136,7 +137,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Result is an attribute node, not output in CDATA. The special characters should be escaped here.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void Attribute_no_CDATA()
         {
             string query = "<hrefAttr xpath='//a/@href' />";
@@ -147,7 +148,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Test wrapping element output in a CDATA
         /// </summary>
-        [TestMethod]
+        [Test]
         public void Elem_CDATA()
         {
             string query = "<anchor cdata='true' xpath='//a' />";
@@ -158,7 +159,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Test wrapping element output not in a CDATA
         /// </summary>
-        [TestMethod]
+        [Test]
         public void Elem_not_CDATA()
         {
             string query = "<anchor cdata='false' xpath='//a' />";
@@ -170,7 +171,7 @@ namespace XHtmlKit.Query.Tests
         /// Test the emit attribute. Setting to 'False' should prevent the wrapper node from being emitted. Allows
         /// use cases where you may want multiple xpaths, but not multiple nodes...
         /// </summary>
-        [TestMethod]
+        [Test]
         public void No_emit_leafnode()
         {
             string query = "<foobar><title emit='False' xpath='//h1/text()' /></foobar>";
@@ -181,7 +182,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Test the emit='False' flag for wrapper elements
         /// </summary>
-        [TestMethod]
+        [Test]
         public void No_emit_elem()
         {
             string query = "<foobar emit='False'><title xpath='//h1/text()' /></foobar>";
@@ -192,7 +193,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Test making sure that with no results we don't return the entire document!
         /// </summary>
-        [TestMethod]
+        [Test]
         public void NoXPathInQuery()
         {
             string query = "<foobar />";
@@ -203,7 +204,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Test that we can return the root node.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void SelectRoot()
         {
             string query = "<foobar xpath='./html'/>";
@@ -214,26 +215,26 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Test XML characters in the attribute...
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XML_Characters_InResults()
         {
             XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(_testHTML);
+            HtmlParser.DefaultParser.LoadHtml(doc, _testHTML);
             Console.WriteLine(ToFormattedString(doc));
 
             string query = "<row xpath='//body/div/@class'></row>";
-            string results = Query.XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<row>This &amp; is a test</row>", results);
         }
 
         /// <summary>
         /// Test an OR xpath on multiple attributes...
         /// </summary>
-        [TestMethod]
+        [Test]
         public void Xpath_OR_test()
         {
             string query = "<rows><row xpath='//body/div/@class | //body/div/@id'></row></rows>";
-            string results = Query.XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<rows><row>This &amp; is a test</row><row>ThisIsAnID123</row></rows>", results);
         }
 
@@ -246,7 +247,7 @@ namespace XHtmlKit.Query.Tests
         /// quotes in the outer xml. The second rational is that it makes expressing the query in JSON
         /// much more readable.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XpathInTextNode()
         {
             string query = "<rows><row>//body/div/@class</row></rows>";
@@ -258,7 +259,7 @@ namespace XHtmlKit.Query.Tests
         /// Test aggregating multiple results with a common parent. This is required
         /// when we wish to run multiple queries, and have the results aggregated.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void AggregateResults()
         {
             XmlDocument resultsDoc = new XmlDocument();
@@ -273,7 +274,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// We should be able to return results that have no parent
         /// </summary>
-        [TestMethod]
+        [Test]
         public void FragementResults()
         {
             string query = "<para xpath='//a/@href' />";
@@ -285,7 +286,7 @@ namespace XHtmlKit.Query.Tests
         /// <summary>
         /// Test that XML comes out ok when there are XML characters in the selected results...
         /// </summary>
-        [TestMethod]
+        [Test]
         public void XMLCharsInOutput()
         {
             string query = "<rows><row xpath='//p'></row></rows>";
@@ -297,7 +298,7 @@ namespace XHtmlKit.Query.Tests
         /// A real world example of querying and parsing a web page to extract meaningful
         /// structured data.
         /// </summary>
-        [TestMethod]
+        [Test]
         public async Task ParseThriftyCategoriesTest()
         {
             // Get query
@@ -322,7 +323,7 @@ namespace XHtmlKit.Query.Tests
         /// The same real-world example, but using the full query
         /// syntax.
         /// </summary>
-        [TestMethod]
+        [Test]
         public async Task QueryThriftyCategoriesTest()
         {
             // Get query
@@ -346,7 +347,7 @@ namespace XHtmlKit.Query.Tests
             Assert.AreEqual(20, resultsDoc.SelectNodes("//category").Count);
         }
 
-        [TestMethod]
+        [Test]
         public async Task ParseThriftyProductsTest()
         {
             // Get query
@@ -376,7 +377,7 @@ namespace XHtmlKit.Query.Tests
         /// The errors should be returned in the XML results, rather than
         /// be thrown by the call.
         /// </summary>
-        [TestMethod]
+        [Test]
         public async Task InvalidUrlTest()
         {
             // Get query

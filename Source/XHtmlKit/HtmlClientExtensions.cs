@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if !net20 && !net35
+
+using System;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
@@ -21,6 +23,11 @@ namespace XHtmlKit.Network
         /// <param name="httpClient"></param>
         public static async Task<TextReader> GetTextReaderAsync(this HttpClient httpClient, string url)
         {
+#if netstandard
+            // Ug... not all encodings are available with NetStandard by default 
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
+
             // Get the Http response
             HttpResponseMessage responseMessage = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
@@ -36,6 +43,7 @@ namespace XHtmlKit.Network
 
             // Try to get the stream's encoding from the Response Headers, default is UTF8 
             // We will try to detect the encoding from the Byte Order Mark if there is no encoding supplied
+            // by the headers...
             var contentHeaders = content.Headers;
             string charset = (contentHeaders.ContentType != null) ? contentHeaders.ContentType.CharSet : null;
             Encoding encoding = (charset != null) ? Encoding.GetEncoding(charset) : Encoding.UTF8; 
@@ -45,8 +53,11 @@ namespace XHtmlKit.Network
             Stream stream = await content.ReadAsStreamAsync().ConfigureAwait(false);
             StreamReader reader = new StreamReader(stream, encoding, detectEncoding);
 
+            System.Diagnostics.Debug.WriteLine("Detected encoding: " + reader.CurrentEncoding.ToString() + ", charset: " + charset + ", detect: " + detectEncoding);
+            
             return reader;
         }
 
     }
 }
+#endif

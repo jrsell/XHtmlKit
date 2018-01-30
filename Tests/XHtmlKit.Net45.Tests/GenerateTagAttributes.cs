@@ -1,11 +1,11 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using System.Collections.Generic;
 
 namespace XHtmlKit.Tests
 {
 
-    [TestClass]
+    [TestFixture]
     public class GenerateTagAttributes
     {
         private enum TagAttributes
@@ -30,7 +30,7 @@ namespace XHtmlKit.Tests
         private static string[] _topLevelTag = new string[] {
             "html", "head", "body" };
 
-        //[TestMethod]
+        //[Test]
         public void Generate()
         {
             SortedList<string, TagAttributes> tags = new SortedList<string, TagAttributes>();
