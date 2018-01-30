@@ -18,15 +18,21 @@ namespace XHtmlKit.DomBuilder.Tests
         [Test]
         public void HelloWorldBasicTest()
         {
-            XmlDomBuilder builder = new XmlDomBuilder();
-            XmlElement htmlElem = builder.AddElement(builder.RootNode, "html");
-            XmlElement bodyElem = builder.AddElement(htmlElem, "body");
-            XmlElement anchor = builder.AddElement(bodyElem, "a");
+            XmlDocument doc = new XmlDocument();
+            XmlDomBuilder builder = new XmlDomBuilder(doc);
+            XmlNode htmlElem = builder.AddElement(builder.RootNode, "html");
+            XmlNode bodyElem = builder.AddElement(htmlElem, "body");
+            XmlNode anchor = builder.AddElement(bodyElem, "a");
             builder.AddAttribute(anchor, "class", "bold");
             builder.AddAttribute(anchor, "class", "red");
             builder.AddText(anchor, "Some Anchor Text");
-            XmlDocument output = builder.Document;
-            Console.WriteLine(output.OuterXml);
+            Console.WriteLine(doc.OuterXml);
+
+            // Ensure we don't repeat attribute values
+            Assert.AreEqual("bold", doc.SelectSingleNode("//a/@class").Value);
+
+            // Just check full output...
+            Assert.AreEqual("<html><body><a class=\"bold\">Some Anchor Text</a></body></html>", doc.OuterXml);
         }
 
     }

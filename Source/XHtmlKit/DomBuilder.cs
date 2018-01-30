@@ -3,25 +3,20 @@ using System.Xml;
 
 namespace XHtmlKit
 {
-    public abstract class DomBuilder<DomDocument, DomElement, DomNode>
+    public abstract class DomBuilder<DomNode>
     {
-        public abstract DomDocument Document { get; }
         public abstract DomNode RootNode { get; }
-        public abstract DomElement AddElement(DomNode node, string elemName);
+        public abstract DomNode AddElement(DomNode node, string elemName);
         public abstract void AddComment(DomNode node, string comment);
-        public abstract void AddText(DomElement node, string text);
-        public abstract void AddAttribute(DomElement node, string attrName, string attrValue);
+        public abstract void AddText(DomNode node, string text);
+        public abstract void AddAttribute(DomNode node, string attrName, string attrValue);
+        public abstract DomNode FindAncestor(DomNode node, string name);
     }
 
-    public class XmlDomBuilder : DomBuilder<XmlDocument, XmlElement, XmlNode>
+    public class XmlDomBuilder : DomBuilder<XmlNode>
     {
         private XmlDocument _doc;
         private XmlNode _rootNode;
-        public XmlDomBuilder()
-        {
-            _doc = new XmlDocument();
-            _rootNode = _doc;
-        }
 
         public XmlDomBuilder(XmlNode rootNode)
         {
@@ -34,17 +29,16 @@ namespace XHtmlKit
             _doc = rootNode is XmlDocument ? (XmlDocument)rootNode : rootNode.OwnerDocument;
         }
 
-        public override XmlDocument Document { get { return _doc; } }
         public override XmlNode RootNode { get { return _rootNode; } }
 
-        public override XmlElement AddElement(XmlNode node, string elemName)
+        public override XmlNode AddElement(XmlNode node, string elemName)
         {
             XmlElement newElem = _doc.CreateElement(elemName);
             node.AppendChild(newElem);
             return newElem;
         }
 
-        public override void AddText(XmlElement node, string text)
+        public override void AddText(XmlNode node, string text)
         {
             node.AppendChild(_doc.CreateTextNode(text));
         }
@@ -54,7 +48,7 @@ namespace XHtmlKit
             node.AppendChild(_doc.CreateComment(comment));
         }
 
-        public override void AddAttribute(XmlElement node, string attrName, string attrValue)
+        public override void AddAttribute(XmlNode node, string attrName, string attrValue)
         {
             // Don't update existing attributes
             if (node.Attributes[attrName] != null)
@@ -63,6 +57,35 @@ namespace XHtmlKit
             XmlAttribute attr = _doc.CreateAttribute(attrName);
             attr.Value = attrValue;
             node.Attributes.Append(attr);
+        }
+
+        public override XmlNode FindAncestor(XmlNode node, string name)
+        {
+            XmlNode parent = node;
+            bool tagMatch = false;
+            while (true)
+            {
+                // Got to the top of the tree
+                if (parent.ParentNode == null)
+                    break;
+                // Got to our root node
+                if (parent == _rootNode)
+                    break;
+                // Found a match for our tag
+                if (parent.Name == name) {
+                    tagMatch = true;
+                    break;
+                }
+
+                // Move up
+                parent = parent.ParentNode;
+            }
+
+            // If we found a match - return the match's parent
+            if (tagMatch)
+                return parent.ParentNode;
+
+            return null;
         }
     }
 }

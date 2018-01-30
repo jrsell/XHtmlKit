@@ -210,6 +210,8 @@ namespace XHtmlKit.Tests
         {
             string query = "<foobar xpath='./html'/>";
             string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+
+            Console.WriteLine(results);
             Assert.AreEqual("<foobar><html><head><title>This is a title</title></head><body><div class=\"This &amp; is a test\" id=\"ThisIsAnID123\" /><h1>This is a title</h1><br /><p> The quick brown <a href=\"www.google.com\">Google &amp; Boogle</a> fox jumped</p><p> The quick brown <a href=\"www.yahoo.com?q=123&amp;v=1\">Yahoo</a> fox jumped</p></body></html></foobar>" , results);
         }
 
