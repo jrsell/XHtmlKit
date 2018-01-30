@@ -296,63 +296,40 @@ namespace XHtmlKit
         // Read all attributes onto the given tag...
         private static void AddAttributes(XmlDocument doc, XmlNode tag, HtmlTextReader reader, string originatingUrl=null)
         {
-            string tok = null;
-            ParseState state; 
-            XmlAttribute currAttr = null;
-            while (true)
+            while (reader.ParseState == ParseState.AttributeName)
             {
-                state = reader.ParseState;
+                // Get the attribute Name and Value
+                string attrName = reader.ReadAttributeName();
+                string attrValue = reader.ParseState == ParseState.AttributeValue ? reader.ReadAttributeValue() : string.Empty;
 
-                // Add attribute name, if it does not already exist on the tag
-                if (state == ParseState.AttributeName)
-                {
-                    tok = reader.ReadNext();
-                    if (string.IsNullOrEmpty(tok))
-                        continue;
-
-                    // Make sure the attribute name is a valid XML name...
-                    string attrName = XmlConvert.EncodeLocalName(tok);
-
-                    // Make sure the attribute does not already exist
-                    currAttr = null;
-                    if (tag.Attributes[attrName] != null)
-                        continue;
-
-                    // Add the attribute
-                    currAttr = doc.CreateAttribute(attrName);
-                    tag.Attributes.Append(currAttr);                    
+                // Make sure we have a value for the attribute name
+                if (string.IsNullOrEmpty(attrName))
                     continue;
+
+                // Make sure the attribute name is a valid XML name...
+                attrName = XmlConvert.EncodeLocalName(attrName);
+
+                // Values can have html encodings - we want them decoded 
+                attrValue = HtmlDecode(attrValue);
+
+                // Fully-qualify UrlAttributes
+                if (originatingUrl != null &&
+                    ((tag.Name == "a" && attrName == "href") || (tag.Name == "img" && attrName == "src")) &&
+                        !attrValue.Contains("://"))
+                {
+                    Uri baseUri = new Uri(originatingUrl);
+                    Uri compbinedUri = new Uri(baseUri, attrValue);
+                    attrValue = compbinedUri.ToString();
                 }
 
-                // Add attribute value
-                if (state == ParseState.AttributeValue)
+                // Add the attribute, if it does not already exist
+                if (tag.Attributes[attrName] == null)
                 {
-                    tok = reader.ReadNext();
-                    if (string.IsNullOrEmpty(tok))
-                        continue;
-
-                    if (currAttr == null)
-                        continue;
-
-                    // Values can have html encodings - we want them decoded 
-                    string attrValue = HtmlDecode(tok);
-
-                    // See if we want to be fully-qualifying UrlAttributes
-                    if (  originatingUrl != null &&
-                        ( (tag.Name == "a" && currAttr.Name == "href") || (tag.Name == "img" && currAttr.Name == "src") ) &&
-                         !attrValue.Contains("://"))
-                    {
-                        Uri baseUri = new Uri(originatingUrl);
-                        Uri compbinedUri = new Uri(baseUri, attrValue);
-                        attrValue = compbinedUri.ToString();
-                    }
-
-                    currAttr.Value = attrValue;                    
-                    continue;
+                    XmlAttribute currAttr = doc.CreateAttribute(attrName);
+                    currAttr.Value = attrValue;
+                    tag.Attributes.Append(currAttr);
                 }
 
-                // The reader is now past the tag, so we are done adding attributes
-                break;
             }
             
         }
