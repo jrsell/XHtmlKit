@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using NUnit.Framework;
 using System.Xml;
 using System.Threading.Tasks;
@@ -52,7 +53,7 @@ namespace XHtmlKit.Tests
         {
             // Transfer content to XmlDoc...
             XmlDocument xhtmlDoc = new XmlDocument();
-            HtmlParser.DefaultParser.LoadHtml(xhtmlDoc, _testHTML);
+            HtmlParser.DefaultParser.LoadHtml(xhtmlDoc, new StringReader(_testHTML));
             Assert.AreEqual("html", xhtmlDoc.DocumentElement.Name);
             Console.WriteLine(xhtmlDoc.OuterXml);
         }
@@ -218,8 +219,7 @@ namespace XHtmlKit.Tests
         [Test]
         public void XML_Characters_InResults()
         {
-            XmlDocument doc = new XmlDocument();
-            HtmlParser.DefaultParser.LoadHtml(doc, _testHTML);
+            XmlDocument doc = XHtmlDocument.Load(_testHTML);
             Console.WriteLine(ToFormattedString(doc));
 
             string query = "<row xpath='//body/div/@class'></row>";

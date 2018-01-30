@@ -68,20 +68,13 @@ namespace XHtmlKit
             return isHeadTag;
         }
 
-        public override void LoadHtml(XmlDocument doc, string html, string baseUrl = null)
-        {
-            LoadXHtml(doc, new StringReader(html), baseUrl, InsersionMode.BeforeHtml);
-        }
+
 
         public override void LoadHtml(XmlDocument doc, TextReader htmlTextReader, string baseUrl = null)
         {
             LoadXHtml(doc, htmlTextReader, baseUrl, InsersionMode.BeforeHtml);
         }
 
-        public override void LoadHtmlFragment(XmlNode rootNode, string html, string baseUrl = null)
-        {
-            LoadXHtml(rootNode, new StringReader(html), baseUrl, InsersionMode.InBody);
-        }
 
         public override void LoadHtmlFragment(XmlNode rootNode, TextReader htmlTextReader, string baseUrl = null)
         {

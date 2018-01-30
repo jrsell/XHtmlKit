@@ -118,7 +118,7 @@ namespace XHtmlKit
 
             // Load content from html string
             XmlDocument xhtmlDoc = new XmlDocument();
-            parser.LoadHtml(xhtmlDoc, html, originatingUrl);
+            parser.LoadHtml(xhtmlDoc, new StringReader(html), originatingUrl);
 
             // Create a result element to mount results onto if none was supplied
             XmlElement resultElem = output;

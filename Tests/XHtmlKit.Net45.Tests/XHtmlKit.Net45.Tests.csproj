@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GenerateTagAttributes.cs" />
+    <Compile Include="DomBuilder_Tests.cs" />
     <Compile Include="HtmlStreamParser.Tests.cs" />
     <Compile Include="HtmlTextReader.Tests.cs" />
     <Compile Include="HttpClientExtensions.Tests.cs" />

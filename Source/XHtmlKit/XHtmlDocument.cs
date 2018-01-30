@@ -10,7 +10,7 @@ namespace XHtmlKit
         {
             HtmlParser p = (parser == null ? HtmlParser.DefaultParser : parser);
             XmlDocument doc = new XmlDocument();
-            p.LoadHtml(doc, html, baseUrl);
+            p.LoadHtml(doc, new StringReader(html), baseUrl);
             return doc;
         }
 
