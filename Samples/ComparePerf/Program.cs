@@ -6,6 +6,7 @@ using XHtmlKit;
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
+using System.Xml.XPath;
 
 namespace ComparePerf
 {
@@ -33,7 +34,7 @@ namespace ComparePerf
 
         static void CompareParserPerformance(string[] samples, int iterations, string xpath = null  )
         {
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw; 
 
             Console.WriteLine("Comparing parsers XHtmlKit and HtmlAgility " + (xpath == null ? " (parsing file in memory only)" : " (parsing file in memory and running xpath query: '" + xpath + "')") + " (" + iterations + " iterations)");
 
@@ -46,18 +47,28 @@ namespace ComparePerf
                 Console.Write("File size: " + numChars);
 
                 // Parser1: XHtmlKit
+                sw = new Stopwatch();
                 sw.Start();                
                 for (int i = 0; i < iterations; i++)
                     searchResults = XHtmlKit_ParseAndSearch(sampleFileContents, xpath);
                 sw.Stop();
-                Console.Write("\tXHtmlKit (ms):\t" + sw.ElapsedMilliseconds + (searchResults.Length > 0 ? "\t found: " + searchResults.Length : "\t"));
+                Console.Write("\tXHtmlKit (ms): " + sw.ElapsedMilliseconds + (searchResults.Length > 0 ? " (" + searchResults.Length + ")" : ""));
 
-                // Parser2: tHtmlAgility
+                // Parser2: XHtmlKit.Linq
+                sw = new Stopwatch();
+                sw.Start();
+                for (int i = 0; i < iterations; i++)
+                    searchResults = XHtmlKit_Linq_ParseAndSearch(sampleFileContents, xpath);
+                sw.Stop();
+                Console.Write("\tXHtmlKit.Linq (ms): " + sw.ElapsedMilliseconds + (searchResults.Length > 0 ? " (" + searchResults.Length + ")": ""));
+
+                // Parser3: tHtmlAgility
+                sw = new Stopwatch();
                 sw.Start();
                 for (int i = 0; i < iterations; i++)
                     searchResults = HtmlAgility_ParseAndSearch(sampleFileContents, xpath);
                 sw.Stop();
-                Console.Write("\tHtmlAgility (ms):\t" + sw.ElapsedMilliseconds + (searchResults.Length > 0 ? "\t found: " + searchResults.Length : "\t"));
+                Console.Write("\tHtmlAgility (ms): " + sw.ElapsedMilliseconds + (searchResults.Length > 0 ? " (" + searchResults.Length + ")" : ""));
 
                 Console.Write("\n");
             }
@@ -69,8 +80,7 @@ namespace ComparePerf
         static string[] XHtmlKit_ParseAndSearch(string html, string xpath=null)
         {
             List<string> searchResults = new List<string>();
-            XmlDocument doc = new XmlDocument();
-            doc.LoadHtml(html);
+            XmlDocument doc = XHtmlLoader.Load(html);
             if (xpath != null)
             {
                 var results = doc.DocumentElement.SelectNodes(xpath);
@@ -83,6 +93,21 @@ namespace ComparePerf
             return searchResults.ToArray();
         }
 
+        static string[] XHtmlKit_Linq_ParseAndSearch(string html, string xpath = null)
+        {
+            List<string> searchResults = new List<string>();
+            System.Xml.Linq.XDocument doc = XHtmlKit.Linq.XHtmlLoader.Load(html);
+            if (xpath != null)
+            {
+                var results = doc.XPathSelectElements(xpath);
+                foreach (System.Xml.Linq.XElement node in results)
+                {
+                    string result = node.Value;
+                    searchResults.Add(result);
+                }
+            }
+            return searchResults.ToArray();
+        }
 
         static string[] HtmlAgility_ParseAndSearch(string html, string xpath = null)
         {

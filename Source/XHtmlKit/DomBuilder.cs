@@ -49,14 +49,14 @@ namespace XHtmlKit
         }
 
         public override void AddAttribute(XmlNode node, string attrName, string attrValue)
-        {
-            // Don't update existing attributes
-            if (node.Attributes[attrName] != null)
-                return;
-
-            XmlAttribute attr = _doc.CreateAttribute(attrName);
-            attr.Value = attrValue;
-            node.Attributes.Append(attr);
+        {            
+            XmlAttributeCollection attributes = node.Attributes;
+            if (attributes[attrName] == null)
+            {
+                XmlAttribute attr = _doc.CreateAttribute(attrName);
+                attr.Value = attrValue;
+                attributes.SetNamedItem(attr);
+            }            
         }
 
         public override XmlNode FindAncestor(XmlNode node, string name)

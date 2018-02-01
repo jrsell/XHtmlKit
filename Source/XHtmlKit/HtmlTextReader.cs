@@ -372,11 +372,11 @@ namespace XHtmlKit
                 }
 
                 // Accumulate
-                _currTok.Append((char)c);
+                _currTok.Append(char.ToLowerInvariant((char)c));
             }
 
             // Return the tag in lower-case
-            return _currTok.ToString().ToLowerInvariant();
+            return _currTok.ToString();
         }
 
         public string ReadAttributeName()
