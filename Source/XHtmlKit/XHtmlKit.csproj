@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard1.3</TargetFrameworks> 
+    <TargetFrameworks>net20;net45;netstandard1.3</TargetFrameworks> 
     <AssemblyName>XHtmlKit</AssemblyName>
     <RootNamespace>XHtmlKit</RootNamespace>
     <SignAssembly>true</SignAssembly>

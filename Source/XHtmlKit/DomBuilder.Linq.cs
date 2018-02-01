@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !net20
+using System;
 using System.Xml.Linq;
 
 namespace XHtmlKit.Linq
@@ -82,3 +83,4 @@ namespace XHtmlKit.Linq
         }
     }
 }
+#endif

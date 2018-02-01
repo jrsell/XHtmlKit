@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿#if !net20
+using System.Xml.Linq;
 using System.IO;
 
 namespace XHtmlKit.Linq
@@ -26,3 +27,4 @@ namespace XHtmlKit.Linq
 
     }
 }
+#endif
