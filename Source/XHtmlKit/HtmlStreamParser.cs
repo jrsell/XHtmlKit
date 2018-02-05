@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
-using System.Text;
+using System.IO;
 
 namespace XHtmlKit
 {
- 
+    public class HtmlParserOptions
+    {
+        public string BaseUrl = null;
+    }
+
     public enum InsersionMode
     {
         BeforeHtml,
@@ -69,8 +73,11 @@ namespace XHtmlKit
             return isHeadTag;
         }
 
-        public void Parse(DomBuilder<DomNode> dom, HtmlTextReader reader, string baseUrl = null, InsersionMode mode = InsersionMode.BeforeHtml)
-        {            
+        public void Parse(DomBuilder<DomNode> dom, TextReader textReader, HtmlParserOptions options, InsersionMode mode = InsersionMode.BeforeHtml)
+        {
+            HtmlTextReader reader = new HtmlTextReader(textReader);
+            HtmlParserOptions parserOptions = options == null ? new HtmlParserOptions() : options;
+
             // DOM Node pointers
             DomNode currNode = dom.RootNode;
             DomNode htmlNode = default(DomNode); 
@@ -210,25 +217,7 @@ namespace XHtmlKit
 
                         // Create the new tag, add attributes, and append to DOM
                         DomNode tag = dom.AddElement(currNode, tok);
-                        AddAttributes(dom, tag, tok, reader, baseUrl);
-
-                        // If this is a meta tag, and we are in the Head, check for charset
-                        if ((insertionMode == InsersionMode.InHead) && (reader.CurrentEncodingConfidence == EncodingConfidence.Tentative) && (tok == "meta"))
-                        {
-                            string charset = dom.GetAttribute(tag, "charset");
-                            string httpEquiv = dom.GetAttribute(tag, "http-equiv");
-                            string content = dom.GetAttribute(tag, "content");
-                            charset = EncodingUtils.GetCharset(charset, httpEquiv, content);
-
-                            // Change the underlying StreamReader's encoding if we found 
-                            // a valid encoding...
-                            if (!string.IsNullOrEmpty(charset)) {
-                                Encoding encoding = EncodingUtils.GetEncoding(charset);
-                                if (encoding != null) {
-                                    reader.CurrentEncoding = encoding;
-                                }
-                            }
-                        }
+                        AddAttributes(dom, tag, tok, reader, parserOptions.BaseUrl);
 
                         // If this is a self closing tag, we are done. Don't move pointer.
                         if ((attributes & TagAttributes.SelfClosing) > 0)

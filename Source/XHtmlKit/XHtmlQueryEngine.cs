@@ -27,23 +27,7 @@ namespace XHtmlKit
             get { return _htmlParser; }
         }
 
-        private static HttpClient _httpClient;
-        private static HttpClient HttpClient
-        {
-            get
-            {
-                if (_httpClient == null)
-                {
-                    _httpClient = new HttpClient();
-                    _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
-                }
-                return _httpClient;
-            }
-            set
-            {
-                _httpClient = value;
-            }
-        }
+        
 
         /// <summary>
         /// Extracts content from an XHtmlNode
@@ -127,7 +111,7 @@ namespace XHtmlKit
         {
             // Load content from html string
             XmlDocument xhtmlDoc = new XmlDocument();
-            this.Parser.Parse(xhtmlDoc, new HtmlTextReader( new StringReader(html) ), originatingUrl);
+            this.Parser.Parse(xhtmlDoc, new StringReader(html), new HtmlParserOptions{ BaseUrl = originatingUrl });
 
             // Create a result element to mount results onto if none was supplied
             XmlElement resultElem = output;
@@ -158,8 +142,8 @@ namespace XHtmlKit
             XmlDocument xhtmlDoc = new XmlDocument();
 
             // Get the Html asynchronously and Parse it into an Xml Document            
-            using (HtmlTextReader htmlReader = await HttpClient.GetTextReaderAsync(url))
-                this.Parser.Parse(xhtmlDoc, htmlReader, url);
+            using (TextReader htmlReader = await HtmlClient.GetTextReaderAsync(url))
+                this.Parser.Parse(xhtmlDoc, htmlReader, new HtmlParserOptions { BaseUrl = url } );
 
             return xhtmlDoc;
         }

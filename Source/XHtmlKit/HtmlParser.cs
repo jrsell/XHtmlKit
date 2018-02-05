@@ -5,7 +5,7 @@ namespace XHtmlKit
 {
     public abstract class HtmlParser
     {
-        public abstract void Parse(XmlDocument doc, HtmlTextReader htmlTextReader, string baseUrl = null);
+        public abstract void Parse(XmlDocument doc, TextReader htmlTextReader, HtmlParserOptions options);
 
         private static HtmlParser _parser = new HtmlParserImpl();
         public static HtmlParser DefaultParser
@@ -17,19 +17,40 @@ namespace XHtmlKit
 
     public class HtmlParserImpl : HtmlParser
     {
-        public override void Parse(XmlDocument doc, HtmlTextReader htmlTextReader, string baseUrl = null)
+        public void Parse(XmlDocument doc, string html)
+        {
+            Parse(doc, html, new HtmlParserOptions());
+        }
+
+        public void Parse(XmlDocument doc, string html, HtmlParserOptions options)
+        {
+            Parse(doc, new StringReader(html), options);
+        }
+
+        public void Parse(XmlDocument doc, TextReader htmlTextReader)
+        {
+            Parse(doc, htmlTextReader, new HtmlParserOptions());
+        }
+
+        public override void Parse(XmlDocument doc, TextReader htmlTextReader, HtmlParserOptions options)
         {
             XmlDomBuilder dom = new XmlDomBuilder(doc);
             HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
-            parser.Parse(dom, htmlTextReader, baseUrl, InsersionMode.BeforeHtml);
+            parser.Parse(dom, htmlTextReader, options);
         }
 
-        public void ParseFragment(XmlNode rootNode, HtmlTextReader htmlTextReader, string baseUrl = null)
+        public void ParseFragment(XmlNode node, string html)
         {
-            XmlDomBuilder dom = new XmlDomBuilder(rootNode);
-            HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
-            parser.Parse(dom, htmlTextReader, baseUrl, InsersionMode.InBody);
+            ParseFragment(node, html, new HtmlParserOptions());
         }
+
+        public void ParseFragment(XmlNode node, string html, HtmlParserOptions options)
+        {
+            XmlDomBuilder dom = new XmlDomBuilder(node);
+            HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
+            parser.Parse(dom, new StringReader(html), options, InsersionMode.InBody);
+        }
+
     }
 
 

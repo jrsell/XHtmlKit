@@ -503,6 +503,10 @@ namespace XHtmlKit.Parser.Tests
             string input;
             string output;
 
+            input = " class=red   id=123 foo=bar ";
+            output = ReadAllAttributes(input);
+            Assert.AreEqual("class='red' id='123' foo='bar'", output);
+
             input = " class='red'   id='123' foo=bar ";
             output = ReadAllAttributes(input);
             Assert.AreEqual("class='red' id='123' foo='bar'", output);

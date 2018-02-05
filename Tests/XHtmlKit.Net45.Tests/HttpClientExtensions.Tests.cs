@@ -48,16 +48,16 @@ namespace XHtmlKit.Network.Tests
             }
         }
 
-        [Test]
-        public void Test_shift_jis()
-        {
-            System.Text.Encoding enc = System.Text.Encoding.GetEncoding("shift_jis");
-            System.Text.Encoding enc2 = System.Text.Encoding.GetEncoding("Windows-31J");
-            bool mybreak = true;
-        }
+        //[Test]
+        //public void Test_shift_jis()
+        //{
+            //System.Text.Encoding enc = System.Text.Encoding.GetEncoding("shift_jis");
+            //System.Text.Encoding enc2 = System.Text.Encoding.GetEncoding("Windows-31J");
+            //bool mybreak = true;
+        //}
 
         [Test]
-        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding01_iso_8859_1()
         {
             // ISO-8859-1: Example where the headers don't provide the encoding... The encoding should be found in the meta charset...
@@ -65,7 +65,7 @@ namespace XHtmlKit.Network.Tests
         }
 
         [Test]
-        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding01_big5()
         {
             // ISO-8859-1: Example where the headers don't provide the encoding... The encoding should be found in the meta charset...
@@ -80,7 +80,7 @@ namespace XHtmlKit.Network.Tests
         }
 
         [Test]
-        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding03_shift_jis()
         {
             // Shift JIS    (shift_jis)... an example where the encoding does not come out of the headers or the BOM...
@@ -88,7 +88,7 @@ namespace XHtmlKit.Network.Tests
         }
 
         [Test]
-        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding03_shift_jis_2()
         {
             // Shift JIS    (shift_jis)... an example where the encoding does not come out of the headers or the BOM...
@@ -134,30 +134,29 @@ namespace XHtmlKit.Network.Tests
             //string title2 = doc2.SelectSingleNode("//title/text()").InnerText;
 
             // Method 2 - use our GetTextReaderAsync() which also does encoding detetion...
-            string s1;
             XHtmlQueryEngine engine = new XHtmlQueryEngine();
             XmlDocument doc1 = new XmlDocument();
 
             System.Text.Encoding initialEncoding=null;
-            EncodingConfidence initialConfidence = EncodingConfidence.Tentative;
+            //EncodingConfidence initialConfidence = EncodingConfidence.Tentative;
             System.Text.Encoding finalEncoding = null;
-            EncodingConfidence finalConfidence = EncodingConfidence.Tentative;
+            //EncodingConfidence finalConfidence = EncodingConfidence.Tentative;
 
             // Get the Html asynchronously and Parse it into an Xml Document            
-            using (HtmlTextReader htmlReader = await HttpClient.GetTextReaderAsync(url)) {
+            using (TextReader htmlReader = await HtmlClient.GetTextReaderAsync(url)) {
 
-                initialEncoding = htmlReader.CurrentEncoding;
-                initialConfidence = htmlReader.CurrentEncodingConfidence;
+                StreamReader streamReader = (StreamReader)htmlReader;
+                initialEncoding = streamReader.CurrentEncoding;
 
-                HtmlParser.DefaultParser.Parse(doc1, htmlReader, url);
+                HtmlParser.DefaultParser.Parse(doc1, htmlReader, new HtmlParserOptions { BaseUrl = url } );
 
-                finalEncoding = htmlReader.CurrentEncoding;
-                finalConfidence = htmlReader.CurrentEncodingConfidence;
+                finalEncoding = streamReader.CurrentEncoding;
+                //finalConfidence = htmlReader.CurrentEncodingConfidence;
             }
 
             string title1 = doc1.SelectSingleNode("//title/text()").InnerText;
 
-            Console.WriteLine("Crawled: " + url + ", title: " + title1 + ", inital: " + initialEncoding.WebName + ", (" + initialConfidence + "), final: " + finalEncoding.WebName + " (" + finalConfidence + ")" );
+            Console.WriteLine("Crawled: " + url + ", title: " + title1 + ", inital: " + initialEncoding.WebName + ", final: " + finalEncoding.WebName  );
 
             // Compare the titles of the pages to see if the encoding is picking up consistently between 
             // GetStringAsync and GetTextReaderAsync
@@ -258,9 +257,8 @@ namespace XHtmlKit.Network.Tests
 
         public async Task<int> DownloadPageUsingGetAsTextReaderAsync(string url)
         {
-            using (HtmlTextReader htmlreader = await HttpClient.GetTextReaderAsync(url))
+            using (TextReader reader = await HtmlClient.GetTextReaderAsync(url))
             {
-                TextReader reader = htmlreader.BaseReader;
                 int c = 0;
                 int charsRead = 0;
                 while (true)

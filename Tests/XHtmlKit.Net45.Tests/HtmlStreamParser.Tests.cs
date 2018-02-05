@@ -25,7 +25,7 @@ namespace XHtmlKit.Parser.Tests
         public static void LinqCompare(XmlDocument doc, string html, string baseUrl=null)
         {
             // Linq check
-            XDocument xdoc = XHtmlLoader.LoadXDocument(html, baseUrl);
+            XDocument xdoc = XHtmlLoader.LoadXDocument(html, new HtmlParserOptions { BaseUrl = baseUrl } );
             string xdocOuterXml = xdoc.ToString(SaveOptions.DisableFormatting);
             Console.WriteLine(xdocOuterXml);
             Assert.AreEqual(doc.OuterXml, xdocOuterXml);
@@ -109,7 +109,7 @@ namespace XHtmlKit.Parser.Tests
                 </div></html>";
             XmlDocument doc = new XmlDocument();
             HtmlParserImpl parser = new HtmlParserImpl();
-            parser.ParseFragment(doc, new HtmlTextReader(html) );
+            parser.ParseFragment(doc, html );
 
             Console.WriteLine(doc.OuterXml);
 
@@ -134,7 +134,7 @@ namespace XHtmlKit.Parser.Tests
             doc.AppendChild(parent);
 
             HtmlParserImpl parser = new HtmlParserImpl();
-            parser.ParseFragment(parent, new HtmlTextReader(html));
+            parser.ParseFragment(parent, html );
 
             Console.WriteLine( ToFormattedString(doc));
 
@@ -233,7 +233,7 @@ namespace XHtmlKit.Parser.Tests
 
             </body></html>";
             string baseUrl = "http://www.foobar.com/products/cat1/someprod.html";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html, baseUrl);
+            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html, new HtmlParserOptions { BaseUrl = baseUrl });
             
             Console.WriteLine(doc.OuterXml);
 
@@ -269,6 +269,26 @@ namespace XHtmlKit.Parser.Tests
 
             // Linq check
             LinqCompare(doc, html);
+
+        }
+
+        /// <summary>
+        /// A number of cases for weird or malformed html attributes.
+        /// </summary>
+        [Test]
+        public void AttributeParsingMultiple()
+        {
+            string html = @"<settings id=01 class=red foo=bar />";
+            XmlDocument doc = new XmlDocument();
+            HtmlParserImpl parser = new HtmlParserImpl();
+            parser.ParseFragment(doc, html);
+
+            Console.WriteLine(ToFormattedString(doc));
+
+            XmlNode settingsNode = doc.SelectSingleNode("//settings");
+            Assert.AreEqual("01", settingsNode.Attributes["id"].Value);
+            Assert.AreEqual("red", settingsNode.Attributes["class"].Value);
+            Assert.AreEqual("bar", settingsNode.Attributes["foo"].Value);
 
         }
 

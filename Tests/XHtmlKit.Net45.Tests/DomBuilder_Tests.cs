@@ -28,8 +28,8 @@ namespace XHtmlKit.DomBuilder.Tests
             builder.AddText(anchor, "Some Anchor Text");
             Console.WriteLine(doc.OuterXml);
 
-            Assert.AreEqual("bold", builder.GetAttribute(anchor, "class"));
-            Assert.IsEmpty(builder.GetAttribute(anchor, "nonexistant"));
+            //Assert.AreEqual("bold", builder.GetAttribute(anchor, "class"));
+            //Assert.IsEmpty(builder.GetAttribute(anchor, "nonexistant"));
 
             // Ensure we don't repeat attribute values
             Assert.AreEqual("bold", doc.SelectSingleNode("//a/@class").Value);
@@ -54,8 +54,8 @@ namespace XHtmlKit.DomBuilder.Tests
             builder.AddText(anchor, "Some Anchor Text");
             Console.WriteLine(doc.ToString());
 
-            Assert.AreEqual("bold", builder.GetAttribute(anchor, "class"));
-            Assert.IsEmpty(builder.GetAttribute(anchor, "nonexistant"));
+            //Assert.AreEqual("bold", builder.GetAttribute(anchor, "class"));
+            //Assert.IsEmpty(builder.GetAttribute(anchor, "nonexistant"));
 
             // Ensure we don't repeat attribute values
             Assert.AreEqual("bold", doc.XPathSelectElement("//a").Attribute("class").Value);

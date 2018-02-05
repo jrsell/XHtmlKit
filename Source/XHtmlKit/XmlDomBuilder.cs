@@ -10,7 +10,6 @@ namespace XHtmlKit
         public abstract void AddComment(DomNode node, string comment);
         public abstract void AddText(DomNode node, string text);
         public abstract void AddAttribute(DomNode node, string attrName, string attrValue);
-        public abstract string GetAttribute(DomNode node, string attrName);
         public abstract DomNode FindAncestor(DomNode node, string name);
     }
 
@@ -58,12 +57,6 @@ namespace XHtmlKit
                 attr.Value = attrValue;
                 attributes.SetNamedItem(attr);
             }            
-        }
-
-        public override string GetAttribute(XmlNode node, string attrName)
-        {
-            XmlAttribute attr = node.Attributes[attrName];
-            return attr == null ? string.Empty : attr.Value;
         }
 
         public override XmlNode FindAncestor(XmlNode node, string name)

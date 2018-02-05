@@ -18,7 +18,8 @@ namespace Crawler
     {
         public string Url = "http://en.wikipedia.org";
         public string OutputDir = "Output";
-        public int Depth = 1;
+        public string Encoding = null; 
+        public int Depth = 0;
         public string UrlFilter = "";
     }
 
@@ -44,15 +45,21 @@ namespace Crawler
             // Get command-line settings - use XHtmlKit parser. Why not.
             if (args.Length > 0 )
             {
+                string settingsHtml = "<settings " + string.Join(" ", args) + " />";
                 XmlDocument settingsDoc = new XmlDocument();
                 HtmlParserImpl parser = new HtmlParserImpl();
-                parser.ParseFragment(settingsDoc, new HtmlTextReader("<settings " + string.Join(" ", args) + " />"));
+                parser.ParseFragment(settingsDoc, settingsHtml);
                 XmlElement settings = settingsDoc.DocumentElement;
 
                 crawlerSettings.Url = (settings.Attributes["Url"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["Url"].Value)) ? settings.Attributes["Url"].Value.Trim() : crawlerSettings.Url;
                 crawlerSettings.Depth = settings.Attributes["Depth"] != null  ?  Convert.ToInt32(settings.Attributes["Depth"].Value ) : crawlerSettings.Depth;
                 crawlerSettings.UrlFilter = (settings.Attributes["UrlFilter"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["UrlFilter"].Value)) ? settings.Attributes["UrlFilter"].Value.Trim() : crawlerSettings.UrlFilter;
                 crawlerSettings.OutputDir = (settings.Attributes["OutputDir"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["OutputDir"].Value)) ? settings.Attributes["OutputDir"].Value.Trim() : crawlerSettings.OutputDir;
+                crawlerSettings.Encoding = (settings.Attributes["Encoding"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["Encoding"].Value)) ? settings.Attributes["Encoding"].Value.Trim() : crawlerSettings.Encoding;
+
+                // See if we wish to override encoding settings...
+                HtmlClient.Options.DetectEncoding = crawlerSettings.Encoding == null;
+                HtmlClient.Options.DefaultEncoding = crawlerSettings.Encoding != null ? System.Text.Encoding.GetEncoding(crawlerSettings.Encoding) : HtmlClient.Options.DefaultEncoding;
             }
 
             // Create 'todo' and 'done' lists
@@ -64,7 +71,7 @@ namespace Crawler
             // Add the root url to the todo list
             urlsToCrawl.Enqueue(new Link { Url = crawlerSettings.Url });
 
-            Console.WriteLine("Crawling: " + crawlerSettings.Url + ", Depth: " + crawlerSettings.Depth + ", OutputDir: " + crawlerSettings.OutputDir + ", UrlFilter: '" + crawlerSettings.UrlFilter + "'");
+            Console.WriteLine("Crawling Url = " + crawlerSettings.Url + " Depth = " + crawlerSettings.Depth + " OutputDir = '" + crawlerSettings.OutputDir + "' UrlFilter = '" + crawlerSettings.UrlFilter + "'");
 
             // Crawl all urls on the 'todo' list
             while (urlsToCrawl.Count > 0)
@@ -79,8 +86,7 @@ namespace Crawler
                 XmlDocument xhtmlDoc;
                 try
                 {
-                    XHtmlQueryEngine engine = new XHtmlQueryEngine();
-                    xhtmlDoc = engine.LoadXHtmlDocAsync(currentUrl.Url).Result;
+                    xhtmlDoc = XHtmlLoader.LoadXmlDocumentAsync(currentUrl.Url).Result;
                     Console.WriteLine(", [OK]");                        
                 }
                 catch (Exception ex)
