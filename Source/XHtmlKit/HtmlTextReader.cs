@@ -4,6 +4,13 @@ using System.IO;
 
 namespace XHtmlKit
 {
+    public enum EncodingConfidence
+    {
+        Tentative, 
+        Certain,
+        Irrelevant
+    }
+
     public enum ParseState
     {
         Comment,
@@ -16,23 +23,160 @@ namespace XHtmlKit
         Done
     }
 
-    /// <summary>
-    /// A simple HTML Tag Tokenizer
-    /// </summary>
-    public class HtmlTextReader
+    public static class EncodingUtils
     {
+        private static System.Collections.Generic.Dictionary<string, string> _encodingAliases = new System.Collections.Generic.Dictionary<string, string>() {
+            {"euc-kr", "windows-949"},
+            {"euc-jp", "cp51932"},
+            {"gb2312", "gbk"},
+            {"gb_2312-80", "gbk"},
+            {"iso-8859-1", "windows-1252"},
+            {"iso-8859-9", "windows-1254"},
+            {"iso-8859-11", "windows-874"},
+            {"ks_c_5601-1987", "windows-949"},
+            {"shift_jis", "Windows-31J"},
+            {"tis-620", "windows-874"},
+            {"us-ascii", "windows-1252"} };
+
+        public static string GetCharset(string charset, string httpEquiv, string content)
+        {
+            // HTML5: <meta charset="UTF-8">
+            // We passed in a value for the charset - so look it up
+            if (!string.IsNullOrEmpty(charset))
+                return charset;
+
+            // HTML 4.0.1: <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+            if (httpEquiv.ToLower().Trim() == "content-type" && !string.IsNullOrEmpty(content)) {
+                var match = System.Text.RegularExpressions.Regex.Match(content, "charset\\s*=[\\s\"']*([^\\s\"' />]*)");
+                if (match.Success) {
+                    return match.Groups[1].Value;
+                }
+            }
+
+            // No charset found
+            return string.Empty;        
+        }
+
+        /// <summary>
+        /// Look up the coding. Returns null if it wasn't found.
+        /// </summary>
+        /// <param name="charset"></param>
+        /// <returns></returns>
+        public static Encoding GetEncoding(string charset)
+        {
+#if netstandard
+            // Ug... not all encodings are available with NetStandard by default 
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
+            string charsetToFind = (charset == null) ? String.Empty : charset.ToLower().Trim();
+
+            // Apply charset alias as per spec...
+            if (_encodingAliases.ContainsKey(charsetToFind)) {
+                charsetToFind = _encodingAliases[charsetToFind];
+            }
+
+            // Look up the encoding in the list of Registered Providers
+            Encoding retval = null;
+            try {
+                retval = Encoding.GetEncoding(charsetToFind);
+            }
+            catch {
+                retval = null;
+            }
+
+            return retval;
+        }
+
+    }
+
+    /// <summary>
+    /// A fast & memory-efficient, HTML Tag Tokenizer.
+    /// </summary>
+    public class HtmlTextReader: IDisposable
+    {
+        private EncodingConfidence _encodingConfidence;
+        private Encoding _initialEncoding;
+        private StreamReader _streamReader;
         private TextReader _reader;
         private ParseState _parseState;
         private StringBuilder _currTok;
         private int _peekChar = 0;
 
+        public HtmlTextReader(string html)
+        {
+            _initialEncoding = null;
+            _encodingConfidence = EncodingConfidence.Irrelevant;
+            _streamReader = null;
+            _reader = new StringReader(html);
+            _currTok = new StringBuilder();
+            _parseState = ParseState.Text;
+            _peekChar = _reader.Read();
+        }
+
         public HtmlTextReader(TextReader reader)
         {
-            _parseState = ParseState.Text;
+            _initialEncoding = null;
+            _encodingConfidence = EncodingConfidence.Irrelevant;
+            _streamReader = null;
             _reader = reader;
             _currTok = new StringBuilder();
+            _parseState = ParseState.Text;
             _peekChar = _reader.Read(); 
         }
+        
+        public HtmlTextReader(Stream stream, Encoding encoding = null )
+        {
+            _initialEncoding = encoding == null ? new UTF8Encoding() : encoding ;
+            _encodingConfidence = encoding == null ? EncodingConfidence.Tentative : EncodingConfidence.Certain;
+            _streamReader = new StreamReader(stream, _initialEncoding, (encoding == null) );
+            _reader = _streamReader;
+            _currTok = new StringBuilder();
+            _parseState = ParseState.Text;
+            _peekChar = _reader.Read();
+        }
+
+        public TextReader BaseReader
+        {
+            get { return _reader; }
+        }
+
+        public Encoding CurrentEncoding
+        {
+            get
+            {
+                if (_streamReader == null)
+                    return null;
+
+                return _streamReader.CurrentEncoding;
+            }
+            set
+            {
+                if (_streamReader == null)
+                    throw new Exception("Internal Error. Cannot change the encoding.");
+
+                // Switch out the underlying StreamReader with the new encoding
+                // and set the confidence to Certain... 
+                _streamReader = new StreamReader(_streamReader.BaseStream, value);
+                _encodingConfidence = EncodingConfidence.Certain;
+            }
+        }
+
+        public EncodingConfidence CurrentEncodingConfidence
+        {
+            get
+            {
+                // If the encoding confidence was initially Tentative, check to see if the 
+                // StreamReader was able to detect a Byte order Mark. If so, we are now confident.
+                if (_encodingConfidence == EncodingConfidence.Tentative) {
+                    if (!object.Equals(CurrentEncoding, _initialEncoding)) {
+                        _encodingConfidence = EncodingConfidence.Certain;
+                    }                
+                }
+
+                return _encodingConfidence;
+            }
+        }
+
 
         public ParseState ParseState
         {
@@ -509,5 +653,9 @@ namespace XHtmlKit
             
         }
 
+        public void Dispose()
+        {
+            ((IDisposable)_reader).Dispose();
+        }
     }
 }

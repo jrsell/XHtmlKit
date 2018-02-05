@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
-using System.IO;
+using System.Text;
 
 namespace XHtmlKit
 {
@@ -14,7 +14,7 @@ namespace XHtmlKit
         InBody
     }
     
-    public class HtmlParserGeneric<DomNode>
+    public class HtmlStreamParser<DomNode>
     {
         private enum TagAttributes
         {
@@ -69,12 +69,8 @@ namespace XHtmlKit
             return isHeadTag;
         }
 
-        public void Parse(DomBuilder<DomNode> dom, TextReader htmlTextReader, string baseUrl = null, InsersionMode mode = InsersionMode.BeforeHtml)
-        {
-
-            // Create HtmlTextReader for html tag tokenization
-            HtmlTextReader reader = new HtmlTextReader(htmlTextReader);
-
+        public void Parse(DomBuilder<DomNode> dom, HtmlTextReader reader, string baseUrl = null, InsersionMode mode = InsersionMode.BeforeHtml)
+        {            
             // DOM Node pointers
             DomNode currNode = dom.RootNode;
             DomNode htmlNode = default(DomNode); 
@@ -216,6 +212,24 @@ namespace XHtmlKit
                         DomNode tag = dom.AddElement(currNode, tok);
                         AddAttributes(dom, tag, tok, reader, baseUrl);
 
+                        // If this is a meta tag, and we are in the Head, check for charset
+                        if ((insertionMode == InsersionMode.InHead) && (reader.CurrentEncodingConfidence == EncodingConfidence.Tentative) && (tok == "meta"))
+                        {
+                            string charset = dom.GetAttribute(tag, "charset");
+                            string httpEquiv = dom.GetAttribute(tag, "http-equiv");
+                            string content = dom.GetAttribute(tag, "content");
+                            charset = EncodingUtils.GetCharset(charset, httpEquiv, content);
+
+                            // Change the underlying StreamReader's encoding if we found 
+                            // a valid encoding...
+                            if (!string.IsNullOrEmpty(charset)) {
+                                Encoding encoding = EncodingUtils.GetEncoding(charset);
+                                if (encoding != null) {
+                                    reader.CurrentEncoding = encoding;
+                                }
+                            }
+                        }
+
                         // If this is a self closing tag, we are done. Don't move pointer.
                         if ((attributes & TagAttributes.SelfClosing) > 0)
                             break;
@@ -296,6 +310,8 @@ namespace XHtmlKit
             return System.Net.WebUtility.HtmlDecode(htmlText);
 #endif
         }
+
+        
 
         private static bool IsNullOrWhiteSpace(String value)
         {

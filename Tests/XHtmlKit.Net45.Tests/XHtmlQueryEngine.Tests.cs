@@ -8,9 +8,22 @@ using XHtmlKit;
 namespace XHtmlKit.Tests
 {
     [TestFixture]
-    public class XHtmlQueryEngine_Tests
+    public class QueryEngine_Tests
     {
-        public XHtmlQueryEngine_Tests()
+        private static XHtmlQueryEngine _queryEngine;
+        public static XHtmlQueryEngine QueryEngine
+        {
+            get
+            {
+                if (_queryEngine == null)
+                {
+                    _queryEngine = new XHtmlQueryEngine();
+                }
+                return _queryEngine;
+            }
+        }
+
+        public QueryEngine_Tests()
         {
             // Configure default parser to use HtmlAgilityPack
             // HtmlParser.DefaultParser = new Parser.HtmlAgility.HtmlAgilityParser();
@@ -53,7 +66,7 @@ namespace XHtmlKit.Tests
         {
             // Transfer content to XmlDoc...
             XmlDocument xhtmlDoc = new XmlDocument();
-            HtmlParser.DefaultParser.Parse(xhtmlDoc, new StringReader(_testHTML));
+            HtmlParser.DefaultParser.Parse(xhtmlDoc, new HtmlTextReader(_testHTML));
             Assert.AreEqual("html", xhtmlDoc.DocumentElement.Name);
             Console.WriteLine(xhtmlDoc.OuterXml);
         }
@@ -80,7 +93,7 @@ namespace XHtmlKit.Tests
         public void SelectNodesTest01()
         {
             string query = "<rows><row xpath='//a'><title xpath='./text()'/><link xpath='./@href'/></row></rows>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<rows><row><title>Google &amp; Boogle</title><link>www.google.com</link></row><row><title>Yahoo</title><link>www.yahoo.com?q=123&amp;v=1</link></row></rows>", results);
         }
 
@@ -89,7 +102,7 @@ namespace XHtmlKit.Tests
         {
             string htmlWithDecodeRequired = "<html><title>Metalogix | Content Migration & Management for O365 & SharePoint</title><a class='hello&#45;world'>My Results</a><a class='hello world'>def</a> </html>";
             string query = "<foobar>//a[@class='hello-world']/text()</foobar>";
-            string results = XHtmlQueryEngine.SelectOnHtml(htmlWithDecodeRequired, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(htmlWithDecodeRequired, query).InnerXml;
             Assert.AreEqual("<foobar>My Results</foobar>", results);
         }
 
@@ -98,7 +111,7 @@ namespace XHtmlKit.Tests
         {
             string htmlWithDecodeRequired = "<html><title>Metalogix | Content Migration & Management for O365 & SharePoint</title><a class='hello&#45;world'>My Results</a><a class='hello world'>def</a> </html>";
             string query = "<foobar>//title/text()</foobar>";
-            string results = XHtmlQueryEngine.SelectOnHtml(htmlWithDecodeRequired, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(htmlWithDecodeRequired, query).InnerXml;
             Assert.AreEqual("<foobar>Metalogix | Content Migration &amp; Management for O365 &amp; SharePoint</foobar>", results);
         }
 
@@ -109,7 +122,7 @@ namespace XHtmlKit.Tests
         public void XpathInText()
         {
             string query = "<foobar>//body <subquery xpath='.//a/text()'/></foobar>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<foobar><subquery>Google &amp; Boogle</subquery><subquery>Yahoo</subquery></foobar>", results);
         }
 
@@ -120,7 +133,7 @@ namespace XHtmlKit.Tests
         public void Text_CDATA()
         {
             string query = "<rows><row xpath='//a'><title cdata='true' xpath='./text()'/><link xpath='./@href'/></row></rows>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<rows><row><title><![CDATA[Google & Boogle]]></title><link>www.google.com</link></row><row><title><![CDATA[Yahoo]]></title><link>www.yahoo.com?q=123&amp;v=1</link></row></rows>", results);
         }
 
@@ -131,7 +144,7 @@ namespace XHtmlKit.Tests
         public void Text_not_CDATA()
         {
             string query = "<anchorText xpath='//a/text()' />";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<anchorText>Google &amp; Boogle</anchorText><anchorText>Yahoo</anchorText>", results);
         }
 
@@ -142,7 +155,7 @@ namespace XHtmlKit.Tests
         public void Attribute_no_CDATA()
         {
             string query = "<hrefAttr xpath='//a/@href' />";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<hrefAttr>www.google.com</hrefAttr><hrefAttr>www.yahoo.com?q=123&amp;v=1</hrefAttr>", results);
         }
 
@@ -153,7 +166,7 @@ namespace XHtmlKit.Tests
         public void Elem_CDATA()
         {
             string query = "<anchor cdata='true' xpath='//a' />";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<anchor><![CDATA[<a href=\"www.google.com\">Google &amp; Boogle</a>]]></anchor><anchor><![CDATA[<a href=\"www.yahoo.com?q=123&amp;v=1\">Yahoo</a>]]></anchor>", results);
         }
 
@@ -164,7 +177,7 @@ namespace XHtmlKit.Tests
         public void Elem_not_CDATA()
         {
             string query = "<anchor cdata='false' xpath='//a' />";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<anchor><a href=\"www.google.com\">Google &amp; Boogle</a></anchor><anchor><a href=\"www.yahoo.com?q=123&amp;v=1\">Yahoo</a></anchor>", results);
         }
 
@@ -176,7 +189,7 @@ namespace XHtmlKit.Tests
         public void No_emit_leafnode()
         {
             string query = "<foobar><title emit='False' xpath='//h1/text()' /></foobar>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<foobar>This is a title</foobar>", results);
         }
 
@@ -187,7 +200,7 @@ namespace XHtmlKit.Tests
         public void No_emit_elem()
         {
             string query = "<foobar emit='False'><title xpath='//h1/text()' /></foobar>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<title>This is a title</title>", results);
         }
 
@@ -198,7 +211,7 @@ namespace XHtmlKit.Tests
         public void NoXPathInQuery()
         {
             string query = "<foobar />";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<foobar />", results);
         }
 
@@ -209,7 +222,7 @@ namespace XHtmlKit.Tests
         public void SelectRoot()
         {
             string query = "<foobar xpath='./html'/>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
 
             Console.WriteLine(results);
             Assert.AreEqual("<foobar><html><head><title>This is a title</title></head><body><div class=\"This &amp; is a test\" id=\"ThisIsAnID123\" /><h1>This is a title</h1><br /><p> The quick brown <a href=\"www.google.com\">Google &amp; Boogle</a> fox jumped</p><p> The quick brown <a href=\"www.yahoo.com?q=123&amp;v=1\">Yahoo</a> fox jumped</p></body></html></foobar>" , results);
@@ -221,11 +234,11 @@ namespace XHtmlKit.Tests
         [Test]
         public void XML_Characters_InResults()
         {
-            XmlDocument doc = XHtmlLoader.Load(_testHTML);
+            XmlDocument doc = XHtmlLoader.LoadXmlDocument(_testHTML);
             Console.WriteLine(ToFormattedString(doc));
 
             string query = "<row xpath='//body/div/@class'></row>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<row>This &amp; is a test</row>", results);
         }
 
@@ -236,7 +249,7 @@ namespace XHtmlKit.Tests
         public void Xpath_OR_test()
         {
             string query = "<rows><row xpath='//body/div/@class | //body/div/@id'></row></rows>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<rows><row>This &amp; is a test</row><row>ThisIsAnID123</row></rows>", results);
         }
 
@@ -253,7 +266,7 @@ namespace XHtmlKit.Tests
         public void XpathInTextNode()
         {
             string query = "<rows><row>//body/div/@class</row></rows>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<rows><row>This &amp; is a test</row></rows>", results);
         }
 
@@ -268,8 +281,8 @@ namespace XHtmlKit.Tests
             XmlElement resultsElem = resultsDoc.CreateElement("testResults");
             resultsDoc.AppendChild(resultsElem);
 
-            XHtmlQueryEngine.SelectOnHtml(_testHTML, "<r1>//body/div/@id</r1>", resultsElem);
-            XHtmlQueryEngine.SelectOnHtml(_testHTML, "<r2>//h1/text()</r2>", resultsElem);
+            QueryEngine.SelectOnHtml(_testHTML, "<r1>//body/div/@id</r1>", resultsElem);
+            QueryEngine.SelectOnHtml(_testHTML, "<r2>//h1/text()</r2>", resultsElem);
             Assert.AreEqual("<testResults><r1>ThisIsAnID123</r1><r2>This is a title</r2></testResults>", resultsDoc.OuterXml);
         }
 
@@ -280,7 +293,7 @@ namespace XHtmlKit.Tests
         public void FragementResults()
         {
             string query = "<para xpath='//a/@href' />";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual("<para>www.google.com</para><para>www.yahoo.com?q=123&amp;v=1</para>", results);
         }
 
@@ -292,7 +305,7 @@ namespace XHtmlKit.Tests
         public void XMLCharsInOutput()
         {
             string query = "<rows><row xpath='//p'></row></rows>";
-            string results = XHtmlQueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
+            string results = QueryEngine.SelectOnHtml(_testHTML, query).InnerXml;
             Assert.AreEqual(@"<rows><row><p> The quick brown <a href=""www.google.com"">Google &amp; Boogle</a> fox jumped</p></row><row><p> The quick brown <a href=""www.yahoo.com?q=123&amp;v=1"">Yahoo</a> fox jumped</p></row></rows>", results);
         }
 
@@ -314,7 +327,7 @@ namespace XHtmlKit.Tests
                 </categories>";
 
             // Run test
-            XmlElement resultsDoc = await XHtmlQueryEngine.RunSelectAsync("https://www.thriftyfoods.com/shop-now/browse", select);
+            XmlElement resultsDoc = await QueryEngine.RunSelectAsync("https://www.thriftyfoods.com/shop-now/browse", select);
 
             System.Diagnostics.Debug.Write(ToFormattedString(resultsDoc.OwnerDocument));
 
@@ -344,7 +357,7 @@ namespace XHtmlKit.Tests
             </query>";
 
             // Run test
-            XmlElement resultsDoc = await XHtmlQueryEngine.RunQueryAsync(select);
+            XmlElement resultsDoc = await QueryEngine.RunQueryAsync(select);
             System.Diagnostics.Debug.Write(ToFormattedString(resultsDoc.OwnerDocument));
             Assert.AreEqual(20, resultsDoc.SelectNodes("//category").Count);
         }
@@ -366,7 +379,7 @@ namespace XHtmlKit.Tests
                 </products>";
 
             // Run test
-            XmlElement resultsDoc = await XHtmlQueryEngine.RunSelectAsync("https://www.thriftyfoods.com/shop-now/bulk-foods?pageSize=5", select);
+            XmlElement resultsDoc = await QueryEngine.RunSelectAsync("https://www.thriftyfoods.com/shop-now/bulk-foods?pageSize=5", select);
 
             System.Diagnostics.Debug.Write(ToFormattedString(resultsDoc.OwnerDocument));
 
@@ -394,7 +407,7 @@ namespace XHtmlKit.Tests
             </query>";
 
             // Run test
-            XmlElement resultsDoc = await XHtmlQueryEngine.RunQueryAsync(select);
+            XmlElement resultsDoc = await QueryEngine.RunQueryAsync(select);
             System.Diagnostics.Debug.Write(ToFormattedString(resultsDoc.OwnerDocument));
             Assert.AreEqual(2, resultsDoc.SelectNodes("//error").Count);
         }

@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using System.IO;
 using XHtmlKit;
-using XHtmlKit.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -29,6 +28,9 @@ namespace XHtmlKit.DomBuilder.Tests
             builder.AddText(anchor, "Some Anchor Text");
             Console.WriteLine(doc.OuterXml);
 
+            Assert.AreEqual("bold", builder.GetAttribute(anchor, "class"));
+            Assert.IsEmpty(builder.GetAttribute(anchor, "nonexistant"));
+
             // Ensure we don't repeat attribute values
             Assert.AreEqual("bold", doc.SelectSingleNode("//a/@class").Value);
 
@@ -51,6 +53,9 @@ namespace XHtmlKit.DomBuilder.Tests
             builder.AddAttribute(anchor, "class", "red");
             builder.AddText(anchor, "Some Anchor Text");
             Console.WriteLine(doc.ToString());
+
+            Assert.AreEqual("bold", builder.GetAttribute(anchor, "class"));
+            Assert.IsEmpty(builder.GetAttribute(anchor, "nonexistant"));
 
             // Ensure we don't repeat attribute values
             Assert.AreEqual("bold", doc.XPathSelectElement("//a").Attribute("class").Value);

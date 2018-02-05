@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using XHtmlKit;
-using XHtmlKit.Query;
 using System.Xml;
 
 namespace Crawler
@@ -46,7 +45,8 @@ namespace Crawler
             if (args.Length > 0 )
             {
                 XmlDocument settingsDoc = new XmlDocument();
-                settingsDoc.LoadHtmlFragment("<settings " + string.Join(" ", args) + " />");
+                HtmlParserImpl parser = new HtmlParserImpl();
+                parser.ParseFragment(settingsDoc, new HtmlTextReader("<settings " + string.Join(" ", args) + " />"));
                 XmlElement settings = settingsDoc.DocumentElement;
 
                 crawlerSettings.Url = (settings.Attributes["Url"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["Url"].Value)) ? settings.Attributes["Url"].Value.Trim() : crawlerSettings.Url;
@@ -79,7 +79,8 @@ namespace Crawler
                 XmlDocument xhtmlDoc;
                 try
                 {
-                    xhtmlDoc = XHtmlQueryEngine.LoadXHtmlDocAsync(currentUrl.Url).Result;
+                    XHtmlQueryEngine engine = new XHtmlQueryEngine();
+                    xhtmlDoc = engine.LoadXHtmlDocAsync(currentUrl.Url).Result;
                     Console.WriteLine(", [OK]");                        
                 }
                 catch (Exception ex)

@@ -2,7 +2,7 @@
 using System;
 using System.Xml.Linq;
 
-namespace XHtmlKit.Linq
+namespace XHtmlKit
 {
     public class XDomBuilder : DomBuilder<XNode>
     {
@@ -51,6 +51,13 @@ namespace XHtmlKit.Linq
                 return;
 
             currNode.Add(new XAttribute(attrName, attrValue));
+        }
+
+        public override string GetAttribute(XNode node, string attrName)
+        {
+            XElement elem = (XElement)node;
+            XAttribute attr = elem.Attribute(attrName);
+            return attr == null ? string.Empty : attr.Value;
         }
 
         public override XNode FindAncestor(XNode node, string name)

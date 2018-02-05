@@ -25,13 +25,51 @@ namespace XHtmlKit.Network.Tests
             }
         }
 
-        
         [Test]
-        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        public void ParseCharset()
+        {
+            string[] content = new string[] {
+                "text/html; charset=ISO-8859-1",
+                "text/html; charset =ISO-8859-1",
+                "text/html; charset= ISO-8859-1",
+                "text/html; charset= ISO-8859-1 ",
+                "text/html; charset= 'ISO-8859-1' ",
+                "text/html; charset= ' ISO-8859-1 '  ",
+                "text/html; charset= \" ISO-8859-1 '  ",
+                "text/html; charset= ' ISO-8859-1 \"  ",
+                 "text/html; charset= \"ISO-8859-1\" "
+            };
+            foreach (string input in content)
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(input, "charset\\s*=[\\s\"']*([^\\s\"' />]*)");
+                Assert.IsTrue(match.Success);
+                Assert.AreEqual("ISO-8859-1", match.Groups[1].Value);
+
+            }
+        }
+
+        [Test]
+        public void Test_shift_jis()
+        {
+            System.Text.Encoding enc = System.Text.Encoding.GetEncoding("shift_jis");
+            System.Text.Encoding enc2 = System.Text.Encoding.GetEncoding("Windows-31J");
+            bool mybreak = true;
+        }
+
+        [Test]
+        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding01_iso_8859_1()
         {
             // ISO-8859-1: Example where the headers don't provide the encoding... The encoding should be found in the meta charset...
             await TestGetTextReaderAsync_ForEncoding("http://www.orange.fr/", "Orange : téléphones, forfaits, Internet, actualité, sport, video");
+        }
+
+        [Test]
+        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        public async Task DetectEncoding01_big5()
+        {
+            // ISO-8859-1: Example where the headers don't provide the encoding... The encoding should be found in the meta charset...
+            await TestGetTextReaderAsync_ForEncoding("http://Momoshop.com.tw", "Orange : téléphones, forfaits, Internet, actualité, sport, video");
         }
 
         [Test]
@@ -42,7 +80,7 @@ namespace XHtmlKit.Network.Tests
         }
 
         [Test]
-        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding03_shift_jis()
         {
             // Shift JIS    (shift_jis)... an example where the encoding does not come out of the headers or the BOM...
@@ -50,11 +88,20 @@ namespace XHtmlKit.Network.Tests
         }
 
         [Test]
-        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        public async Task DetectEncoding03_shift_jis_2()
+        {
+            // Shift JIS    (shift_jis)... an example where the encoding does not come out of the headers or the BOM...
+            await TestGetTextReaderAsync_ForEncoding("http://kakaku.com/", "Unknown...");
+        }
+        
+
+        [Test]
+        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding04_Windows_1252()
         {
             // Windows-1252    
-            await TestGetTextReaderAsync_ForEncoding("https://www.usps.com/", "Error... no charset in headers...");
+            await TestGetTextReaderAsync_ForEncoding("https://www.usps.com/", "Welcome | USPS");
         }
 
         [Test]
@@ -88,14 +135,29 @@ namespace XHtmlKit.Network.Tests
 
             // Method 2 - use our GetTextReaderAsync() which also does encoding detetion...
             string s1;
-            using (TextReader reader = await HttpClient.GetTextReaderAsync(url))
-            {                
-                s1 = reader.ReadToEnd();
+            XHtmlQueryEngine engine = new XHtmlQueryEngine();
+            XmlDocument doc1 = new XmlDocument();
+
+            System.Text.Encoding initialEncoding=null;
+            EncodingConfidence initialConfidence = EncodingConfidence.Tentative;
+            System.Text.Encoding finalEncoding = null;
+            EncodingConfidence finalConfidence = EncodingConfidence.Tentative;
+
+            // Get the Html asynchronously and Parse it into an Xml Document            
+            using (HtmlTextReader htmlReader = await HttpClient.GetTextReaderAsync(url)) {
+
+                initialEncoding = htmlReader.CurrentEncoding;
+                initialConfidence = htmlReader.CurrentEncodingConfidence;
+
+                HtmlParser.DefaultParser.Parse(doc1, htmlReader, url);
+
+                finalEncoding = htmlReader.CurrentEncoding;
+                finalConfidence = htmlReader.CurrentEncodingConfidence;
             }
-            XmlDocument doc1 = XHtmlLoader.Load(s1);
+
             string title1 = doc1.SelectSingleNode("//title/text()").InnerText;
 
-            Console.WriteLine("Compared: " + url + ", len: " + s1.Length + ", title: " + title1);
+            Console.WriteLine("Crawled: " + url + ", title: " + title1 + ", inital: " + initialEncoding.WebName + ", (" + initialConfidence + "), final: " + finalEncoding.WebName + " (" + finalConfidence + ")" );
 
             // Compare the titles of the pages to see if the encoding is picking up consistently between 
             // GetStringAsync and GetTextReaderAsync
@@ -196,8 +258,9 @@ namespace XHtmlKit.Network.Tests
 
         public async Task<int> DownloadPageUsingGetAsTextReaderAsync(string url)
         {
-            using (TextReader reader = await HttpClient.GetTextReaderAsync(url))
+            using (HtmlTextReader htmlreader = await HttpClient.GetTextReaderAsync(url))
             {
+                TextReader reader = htmlreader.BaseReader;
                 int c = 0;
                 int charsRead = 0;
                 while (true)

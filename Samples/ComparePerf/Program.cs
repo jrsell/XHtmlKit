@@ -80,7 +80,7 @@ namespace ComparePerf
         static string[] XHtmlKit_ParseAndSearch(string html, string xpath=null)
         {
             List<string> searchResults = new List<string>();
-            XmlDocument doc = XHtmlLoader.Load(html);
+            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
             if (xpath != null)
             {
                 var results = doc.DocumentElement.SelectNodes(xpath);
@@ -96,7 +96,7 @@ namespace ComparePerf
         static string[] XHtmlKit_Linq_ParseAndSearch(string html, string xpath = null)
         {
             List<string> searchResults = new List<string>();
-            System.Xml.Linq.XDocument doc = XHtmlKit.Linq.XHtmlLoader.Load(html);
+            System.Xml.Linq.XDocument doc = XHtmlLoader.LoadXDocument(html);
             if (xpath != null)
             {
                 var results = doc.XPathSelectElements(xpath);

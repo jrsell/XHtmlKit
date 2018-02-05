@@ -6,7 +6,6 @@ using System.Collections;
 using System.Threading.Tasks;
 using System.IO;
 using System.Collections.Generic;
-using XHtmlKit.Network;
 
 namespace XHtmlKit
 {
@@ -14,10 +13,22 @@ namespace XHtmlKit
     /// Adds extensions to the XmlDocument class for querying the document
     /// using XPath... 
     /// </summary>
-    public static class XHtmlQueryEngine
+    public class XHtmlQueryEngine
     {
+        private HtmlParser _htmlParser = null;
+
+        public XHtmlQueryEngine(HtmlParser parser=null)
+        {
+            _htmlParser = parser != null ? parser :  HtmlParser.DefaultParser;
+        }
+
+        public HtmlParser Parser
+        {
+            get { return _htmlParser; }
+        }
+
         private static HttpClient _httpClient;
-        public static HttpClient HttpClient
+        private static HttpClient HttpClient
         {
             get
             {
@@ -40,7 +51,7 @@ namespace XHtmlKit
         /// <param name="inputHtmlNode"></param>
         /// <param name="selectQueryNode"></param>
         /// <param name="resultMountNode"></param>
-        public static void SelectNodes(this XmlNode inputHtmlNode, XmlNode selectQueryNode, XmlNode resultMountNode)
+        private static void SelectNodes(XmlNode inputHtmlNode, XmlNode selectQueryNode, XmlNode resultMountNode)
         {
             // Don't query on something that is not an element
             if (selectQueryNode.NodeType != XmlNodeType.Element)
@@ -71,7 +82,7 @@ namespace XHtmlKit
                     // Recurse down
                     foreach (XmlNode childSelectNode in selectQueryNode.ChildNodes)
                     {
-                        queryResultNode.SelectNodes(childSelectNode, childResultNode);
+                        SelectNodes(queryResultNode, childSelectNode, childResultNode);
                     }
                 }
 
@@ -112,13 +123,11 @@ namespace XHtmlKit
 
         }
 
-        public static XmlElement SelectOnHtml(string html, string selectQueryXml, XmlElement output = null, string originatingUrl = null, HtmlParser p = null)
+        public XmlElement SelectOnHtml(string html, string selectQueryXml, XmlElement output = null, string originatingUrl = null)
         {
-            HtmlParser parser = (p == null ? HtmlParser.DefaultParser : p);
-
             // Load content from html string
             XmlDocument xhtmlDoc = new XmlDocument();
-            parser.Parse(xhtmlDoc, new StringReader(html), originatingUrl);
+            this.Parser.Parse(xhtmlDoc, new HtmlTextReader( new StringReader(html) ), originatingUrl);
 
             // Create a result element to mount results onto if none was supplied
             XmlElement resultElem = output;
@@ -133,32 +142,29 @@ namespace XHtmlKit
             return SelectOnXHtml(xhtmlDoc, selectQueryXml, resultElem);
         }
 
-        public static XmlElement SelectOnXHtml(XmlDocument xhtmlDoc, string selectQueryXml, XmlElement output)
+        public XmlElement SelectOnXHtml(XmlDocument xhtmlDoc, string selectQueryXml, XmlElement output)
         {
             // Load query
             XmlDocument selectDoc = new XmlDocument();
             selectDoc.LoadXml(selectQueryXml);
 
             // Select content
-            xhtmlDoc.SelectNodes(selectDoc.DocumentElement, output);
+            SelectNodes(xhtmlDoc, selectDoc.DocumentElement, output);
             return output;
         }
 
-        public static async Task<XmlDocument> LoadXHtmlDocAsync(string url, HtmlParser parser = null)
+        public async Task<XmlDocument> LoadXHtmlDocAsync(string url)
         {
             XmlDocument xhtmlDoc = new XmlDocument();
 
-            // Determine which parser to use
-            HtmlParser parserToUse = parser == null ? HtmlParser.DefaultParser : parser;
-
             // Get the Html asynchronously and Parse it into an Xml Document            
-            using (TextReader htmlReader = await HttpClient.GetTextReaderAsync(url))
-                parserToUse.Parse(xhtmlDoc, htmlReader, url);
+            using (HtmlTextReader htmlReader = await HttpClient.GetTextReaderAsync(url))
+                this.Parser.Parse(xhtmlDoc, htmlReader, url);
 
             return xhtmlDoc;
         }
 
-        public static async Task<XmlElement> RunSelectAsync(string url, string selectQueryXml, XmlElement outputElement=null, HtmlParser parser = null)
+        public async Task<XmlElement> RunSelectAsync(string url, string selectQueryXml, XmlElement outputElement=null)
         {
             // Create a result element to mount results onto if none was supplied
             XmlElement resultElem = outputElement;
@@ -172,7 +178,7 @@ namespace XHtmlKit
             try
             {
                 // Get the Html asynchronously and Parse it into an Xml Document
-                XmlDocument xhtmlDoc = await LoadXHtmlDocAsync(url, parser);
+                XmlDocument xhtmlDoc = await LoadXHtmlDocAsync(url);
 
                 // Run the query on the xhtml content, mount onto results
                 SelectOnXHtml(xhtmlDoc, selectQueryXml, resultElem);
@@ -186,14 +192,14 @@ namespace XHtmlKit
             return resultElem;
         }
 
-        public static async Task<XmlElement> RunQueryAsync(string queryXml, HtmlParser parser = null)
+        public async Task<XmlElement> RunQueryAsync(string queryXml)
         {
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(queryXml);
-            return await RunQueryAsync(xmlDoc, parser);
+            return await RunQueryAsync(xmlDoc);
         }
 
-        public static async Task<XmlElement> RunQueryAsync(XmlDocument queryDoc, HtmlParser parser = null)
+        public async Task<XmlElement> RunQueryAsync(XmlDocument queryDoc)
         {
             // Get the 'select' node, and ensure we are not going to emit a 'select' node in the results
             XmlElement selectQueryNode = (XmlElement)queryDoc.SelectSingleNode("//query/select");
@@ -219,7 +225,7 @@ namespace XHtmlKit
             List<Task> tasks = new List<Task>();
             foreach (XmlNode urlNode in fromQueryNodes)
             {
-                tasks.Add(RunSelectAsync(urlNode.InnerText, selectQueryNode.OuterXml, resultNode, parser));
+                tasks.Add(RunSelectAsync(urlNode.InnerText, selectQueryNode.OuterXml, resultNode));
             }
 
             // Await the results...
