@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.IO;
+using System.Collections.Generic;
 
 namespace XHtmlKit
 {
@@ -17,47 +18,110 @@ namespace XHtmlKit
         Done
     }
 
-    
+    public enum EncodingConfidence
+    {
+        Irrelevant,
+        Tentative,
+        Certain
+    }
+
+    public class HtmlStreamMetaData
+    {
+        public string OriginatingUrl = String.Empty;
+        public List<Tuple<string, string>> HttpHeaders = new List<Tuple<string, string>>();
+    }
+
     /// <summary>
     /// A fast & memory-efficient, HTML Tag Tokenizer.
     /// </summary>
     public class HtmlTextReader: IDisposable
     {
+        private HtmlStream _htmlStream;
         private TextReader _reader;
         private ParseState _parseState;
         private StringBuilder _currTok;
         private int _peekChar = 0;
+        HtmlStreamMetaData _metadata;
+        private EncodingConfidence _encodingConfidence;
+        private Encoding _initialEncoding;
 
         public HtmlTextReader(string html)
         {
-            _reader = new StringReader(html);
+            Init(new StringReader(html));
+        }
+
+        public HtmlTextReader(TextReader reader)
+        {
+            Init(reader);
+        }
+
+        public HtmlTextReader(Stream stream, Encoding encoding, EncodingConfidence encodingConfidence)
+        {
+            Init(stream, encoding, encodingConfidence);
+        }
+
+        private void Init(Stream stream, Encoding encoding, EncodingConfidence encodingConfidence)
+        {
+            _initialEncoding = encoding;
+            _htmlStream = stream is HtmlStream ? (HtmlStream)stream : null;
+            _encodingConfidence = encodingConfidence;
+            _reader = new StreamReader(stream, encoding, encodingConfidence == EncodingConfidence.Tentative);
+            _metadata = new HtmlStreamMetaData();
             _currTok = new StringBuilder();
             _parseState = ParseState.Text;
             _peekChar = _reader.Read();
         }
 
-        public HtmlTextReader(TextReader reader)
+        private void Init(TextReader reader)
         {
+            _initialEncoding = (reader is StreamReader) ? ((StreamReader)reader).CurrentEncoding : null;
+            _htmlStream = null;
+            _encodingConfidence = EncodingConfidence.Certain;
             _reader = reader;
+            _metadata = new HtmlStreamMetaData();
             _currTok = new StringBuilder();
             _parseState = ParseState.Text;
-            _peekChar = _reader.Read(); 
+            _peekChar = _reader.Read();
         }
-        
+
         public TextReader BaseReader
         {
             get { return _reader; }
         }
 
+        public HtmlStreamMetaData MetaData
+        {
+            get { return _metadata; }
+        }
+
+        public bool CanRewind
+        {
+            get { return (_htmlStream != null) && _htmlStream.CanRewind; }
+        }
+
+        public void Rewind(Encoding newEncoding)
+        {
+            if (!CanRewind)
+                throw new Exception("Internal Error: Cannot rewind this Stream.");
+
+            // Rewind our underlying stream, back to the beginning
+            _htmlStream.Rewind();
+
+            // Re-initialize ourselves with a new TextReader and the new Encoding...
+            Init(_htmlStream, newEncoding, EncodingConfidence.Certain);
+        }
+
+        /// <summary>
+        /// Returns the current encoding being used on the underlying stream
+        /// </summary>
         public Encoding CurrentEncoding
         {
-            get
-            {
-                if (_reader is StreamReader)
-                    return ((StreamReader)_reader).CurrentEncoding;
+            get { return (_reader is StreamReader) ? ((StreamReader)_reader).CurrentEncoding : null; }
+        }
 
-                return null;
-            }
+        public EncodingConfidence CurrentEncodingConfidence
+        {
+            get { return _encodingConfidence; }
         }
 
         public ParseState ParseState

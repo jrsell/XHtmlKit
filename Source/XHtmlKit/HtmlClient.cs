@@ -35,23 +35,27 @@ namespace XHtmlKit
             get { return _options; }
         }
 
+
+        public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(string url)
+        {
+            return await GetHtmlTextReaderAsync(url, HtmlClient.Options);
+        }
+
         /// <summary>
         /// Returns a TextReader that detects the underlying stream's endoding. Allows clients to stream the 
         /// retured content using a TextReader. This method is similar in purpose to GetStreamAsync, however, GetStreamAsync
         /// doesn't detect the Stream's encoding as GetStringAsync does. 
         /// </summary>
         /// <param name="httpClient"></param>
-        public static async Task<TextReader> GetTextReaderAsync(string url)
+        public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(string url, HtmlClientOptions options)
         {
-#if netstandard
-            // Ug... not all encodings are available with NetStandard by default 
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
+            HtmlClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
 
-            HtmlClientOptions options = Options;
-
-            HttpClient.DefaultRequestHeaders.Remove("User-Agent");
-            HttpClient.DefaultRequestHeaders.Add("User-Agent", options.UserAgent);
+            // Set user agent if specified
+            if (!string.IsNullOrEmpty(optionsToUse.UserAgent)) {
+                HttpClient.DefaultRequestHeaders.Remove("User-Agent");
+                HttpClient.DefaultRequestHeaders.Add("User-Agent", optionsToUse.UserAgent);
+            }
 
             // Get the Http response
             HttpResponseMessage responseMessage = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
@@ -63,28 +67,104 @@ namespace XHtmlKit
             HttpContent content = responseMessage.Content;
             if (content == null)
             {
-                return new StringReader(String.Empty);
+                // TODO: capture metadata?
+                return new HtmlTextReader(String.Empty);
             }
-
-            // Try to get the stream's encoding from the Response Headers, default is UTF8 
+            
+            // Try to get the stream's encoding from the Response Headers, or fall back on default. 
             // We will also try to detect the encoding from the Byte Order Mark if there is no encoding supplied
-            // by the headers. Note - this should be augmented at some point, by the 
-            // ability to detect the encoding from the <meta> tag in the document itself.
-            Encoding encoding = options.DefaultEncoding;
-            bool detectEncodingFromBOM = true;
-            if (options.DetectEncoding)
+            // by the headers. If both of these fail, the Parser should look for an encoding in the <meta> tags of 
+            // the html itself.
+            Encoding encoding = optionsToUse.DefaultEncoding;
+
+            // Try to detect the encoding from Http Headers
+            bool gotEncodingFromHttpHeaders = false;
+            if (optionsToUse.DetectEncoding)
             {
                 var contentHeaders = content.Headers;
                 string charset = (contentHeaders.ContentType != null) ? contentHeaders.ContentType.CharSet : null;
-                encoding = (charset != null) ? Encoding.GetEncoding(charset) : options.DefaultEncoding;
-                detectEncodingFromBOM = (charset == null) ? true : false;
-                System.Diagnostics.Debug.WriteLine("Detected encoding: charset: " + charset + ", detect from BOM: " + detectEncodingFromBOM);
+                encoding = EncodingUtils.GetEncoding(charset);
+                gotEncodingFromHttpHeaders = encoding != null;
+                encoding = (encoding == null ? optionsToUse.DefaultEncoding : encoding);
+                System.Diagnostics.Debug.WriteLine("Detected encoding: charset: " + charset + ", got encoding from headers: " + gotEncodingFromHttpHeaders);
             }
 
-            // Return the decoded stream as a TextReader
-            Stream stream = await content.ReadAsStreamAsync().ConfigureAwait(false);
-            StreamReader reader = new StreamReader(stream, encoding, detectEncodingFromBOM);
-            return reader;
+            // Out of band encoding can be either passed in by clients, or found in the http headers...
+            bool gotEncodingFromOutOfBandSource = !optionsToUse.DetectEncoding || gotEncodingFromHttpHeaders;
+            EncodingConfidence encodingConfidence = gotEncodingFromOutOfBandSource ? EncodingConfidence.Certain : EncodingConfidence.Tentative;
+
+            // If encoding was NOT supplied out of band, then we will try to detect it from the stream's BOM
+            bool tryToDetectEncodingFromByteOrderMark = (encodingConfidence == EncodingConfidence.Tentative);
+
+            // Get the stream from the network
+            Stream networkStream = await content.ReadAsStreamAsync().ConfigureAwait(false);
+
+            // If we are still tentative about the encoding, pop the stream into a wrapper that let's us re-wind.
+            Stream baseStream = (encodingConfidence == EncodingConfidence.Tentative) ? new HtmlStream(networkStream) : networkStream;
+
+            // Return a HtmlTextReader with the encoding as detected so far... 
+            HtmlTextReader htmlReader = new HtmlTextReader(baseStream, encoding, encodingConfidence);
+
+            // Store some metadata about how the stream came to be...
+            htmlReader.MetaData.OriginatingUrl = url;
+            foreach (var header in content.Headers)
+            {
+                htmlReader.MetaData.HttpHeaders.Add(Tuple.Create(header.Key, string.Join(",", header.Value)));
+            }
+
+            return htmlReader;
+        }
+
+    }
+
+    public static class EncodingUtils
+    {
+        public static string GetCharset(string charset, string httpEquiv, string content)
+        {
+            // HTML5: <meta charset="UTF-8">
+            // We passed in a value for the charset - so look it up
+            if (!string.IsNullOrEmpty(charset))
+                return charset;
+
+            // HTML 4.0.1: <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+            if (httpEquiv.ToLower().Trim() == "content-type" && !string.IsNullOrEmpty(content))
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(content, "charset\\s*=[\\s\"']*([^\\s\"' />]*)");
+                if (match.Success)
+                {
+                    return match.Groups[1].Value;
+                }
+            }
+
+            // No charset found
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Look up the coding. Returns null if it wasn't found.
+        /// </summary>
+        /// <param name="charset"></param>
+        /// <returns></returns>
+        public static Encoding GetEncoding(string charset)
+        {
+#if netstandard
+            // Ug... not all encodings are available with NetStandard by default 
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
+            string charsetToFind = (charset == null) ? String.Empty : charset.ToLower().Trim();
+
+            // Look up the encoding in the list of Registered Providers
+            Encoding retval = null;
+            try
+            {
+                retval = Encoding.GetEncoding(charsetToFind);
+            }
+            catch
+            {
+                retval = null;
+            }
+
+            return retval;
         }
 
     }

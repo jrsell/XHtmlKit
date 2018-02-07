@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
-using System.IO;
+using System.Text;
 
 namespace XHtmlKit
 {
@@ -20,7 +20,7 @@ namespace XHtmlKit
     
     public class HtmlStreamParser<DomNode>
     {
-        private enum TagAttributes
+        private enum TagProperties
         {
             None = 0,
             SelfClosing = 1,
@@ -29,53 +29,46 @@ namespace XHtmlKit
             RCData = 8,
         }
 
-        private static Dictionary<string, TagAttributes> _tagAttributes = new Dictionary<string, TagAttributes>()
+        private static Dictionary<string, TagProperties> _tagProperties = new Dictionary<string, TagProperties>()
         {
-            {"area", TagAttributes.SelfClosing},
-            {"base", TagAttributes.SelfClosing | TagAttributes.IsHeadTag},
-            {"basefont", TagAttributes.SelfClosing | TagAttributes.IsHeadTag},
-            {"bgsound", TagAttributes.SelfClosing | TagAttributes.IsHeadTag},
-            {"body", TagAttributes.TopLevel},
-            {"br", TagAttributes.SelfClosing},
-            {"col", TagAttributes.SelfClosing},
-            {"command", TagAttributes.SelfClosing},
-            {"embed", TagAttributes.SelfClosing},
-            {"head", TagAttributes.TopLevel},
-            {"hr", TagAttributes.SelfClosing},
-            {"html", TagAttributes.TopLevel},
-            {"iframe", TagAttributes.RCData},
-            {"img", TagAttributes.SelfClosing},
-            {"input", TagAttributes.SelfClosing},
-            {"keygen", TagAttributes.SelfClosing},
-            {"link", TagAttributes.SelfClosing | TagAttributes.IsHeadTag},
-            {"menuitem", TagAttributes.SelfClosing},
-            {"meta", TagAttributes.SelfClosing | TagAttributes.IsHeadTag},
-            {"noembed", TagAttributes.RCData},
-            {"noframes", TagAttributes.IsHeadTag},
-            {"noscript", TagAttributes.IsHeadTag | TagAttributes.RCData},
-            {"param", TagAttributes.SelfClosing},
-            {"script", TagAttributes.IsHeadTag | TagAttributes.RCData},
-            {"source", TagAttributes.SelfClosing},
-            {"style", TagAttributes.IsHeadTag | TagAttributes.RCData},
-            {"template", TagAttributes.IsHeadTag},
-            {"textarea", TagAttributes.RCData},
-            {"title", TagAttributes.IsHeadTag | TagAttributes.RCData},
-            {"track", TagAttributes.SelfClosing},
-            {"wbr", TagAttributes.SelfClosing},
-            {"xmp", TagAttributes.RCData}
+            {"area", TagProperties.SelfClosing},
+            {"base", TagProperties.SelfClosing | TagProperties.IsHeadTag},
+            {"basefont", TagProperties.SelfClosing | TagProperties.IsHeadTag},
+            {"bgsound", TagProperties.SelfClosing | TagProperties.IsHeadTag},
+            {"body", TagProperties.TopLevel},
+            {"br", TagProperties.SelfClosing},
+            {"col", TagProperties.SelfClosing},
+            {"command", TagProperties.SelfClosing},
+            {"embed", TagProperties.SelfClosing},
+            {"head", TagProperties.TopLevel},
+            {"hr", TagProperties.SelfClosing},
+            {"html", TagProperties.TopLevel},
+            {"iframe", TagProperties.RCData},
+            {"img", TagProperties.SelfClosing},
+            {"input", TagProperties.SelfClosing},
+            {"keygen", TagProperties.SelfClosing},
+            {"link", TagProperties.SelfClosing | TagProperties.IsHeadTag},
+            {"menuitem", TagProperties.SelfClosing},
+            {"meta", TagProperties.SelfClosing | TagProperties.IsHeadTag},
+            {"noembed", TagProperties.RCData},
+            {"noframes", TagProperties.IsHeadTag},
+            {"noscript", TagProperties.IsHeadTag | TagProperties.RCData},
+            {"param", TagProperties.SelfClosing},
+            {"script", TagProperties.IsHeadTag | TagProperties.RCData},
+            {"source", TagProperties.SelfClosing},
+            {"style", TagProperties.IsHeadTag | TagProperties.RCData},
+            {"template", TagProperties.IsHeadTag},
+            {"textarea", TagProperties.RCData},
+            {"title", TagProperties.IsHeadTag | TagProperties.RCData},
+            {"track", TagProperties.SelfClosing},
+            {"wbr", TagProperties.SelfClosing},
+            {"xmp", TagProperties.RCData}
         };
 
-        private static bool IsHeadTag(string tag)
-        {
-            TagAttributes attrs = TagAttributes.None;
-            _tagAttributes.TryGetValue(tag, out attrs);
-            bool isHeadTag = (attrs & TagAttributes.IsHeadTag) > 0;
-            return isHeadTag;
-        }
+        
 
-        public void Parse(DomBuilder<DomNode> dom, TextReader textReader, HtmlParserOptions options, InsersionMode mode = InsersionMode.BeforeHtml)
+        public void Parse(DomBuilder<DomNode> dom, HtmlTextReader reader, HtmlParserOptions options, InsersionMode mode = InsersionMode.BeforeHtml)
         {
-            HtmlTextReader reader = new HtmlTextReader(textReader);
             HtmlParserOptions parserOptions = options == null ? new HtmlParserOptions() : options;
 
             // DOM Node pointers
@@ -197,13 +190,13 @@ namespace XHtmlKit
                     
                     case ParseState.OpenTag:
 
-                        // Look up the attributes of the tag
-                        TagAttributes attributes = TagAttributes.None;
-                        _tagAttributes.TryGetValue(tok, out attributes);
+                        // Look up the properties of the tag
+                        TagProperties properties = TagProperties.None;
+                        _tagProperties.TryGetValue(tok, out properties);
 
-                        // For top-level html, body, all we do is add attributes to 
-                        // the already create nodes. head tags get ignored
-                        if ( (attributes & TagAttributes.TopLevel) > 0 ) {
+                        // For top-level <html>, & <body> tags, all we do is add attributes to 
+                        // the already create nodes. <head> tags get ignored
+                        if ( (properties & TagProperties.TopLevel) > 0 ) {
                             if (tok == "html" && htmlNode != null) {
                                 AddAttributes(dom, htmlNode, tok, reader);
                                 break;
@@ -215,16 +208,35 @@ namespace XHtmlKit
                             break;
                         }
 
+                        
                         // Create the new tag, add attributes, and append to DOM
-                        DomNode tag = dom.AddElement(currNode, tok);
-                        AddAttributes(dom, tag, tok, reader, parserOptions.BaseUrl);
+                        string tagName = EncodeLocalName(tok);
+                        DomNode tag = dom.AddElement(currNode, tagName);
+                        AddAttributes(dom, tag, tagName, reader, parserOptions.BaseUrl);
+                        
+                        // If this is a meta tag, and our underlying stream
+                        // lets us ReWind, and we are tentative about the encoding, then check for a new charset
+                        if (((properties & TagProperties.IsHeadTag) > 0) && (reader.CurrentEncodingConfidence == EncodingConfidence.Tentative) && reader.CanRewind && (tok == "meta"))
+                        {
+                            Encoding encoding = CheckForNewEncoding(tag, dom);
+                            
+                            // If we found a new encoding encoding, we will need to start over!
+                            if (encoding != null /* TODO: and if it is different from current one ? */)
+                            {
+                                // Start over!
+                                reader.Rewind(encoding); // Rewind underlying stream, set new encoding
+                                dom.RemoveAll(dom.RootNode); // Clear DOM so far
+                                Parse(dom, reader, options, mode); // Re-parse from scratch
+                                return;
+                            }
+                        }                        
 
                         // If this is a self closing tag, we are done. Don't move pointer.
-                        if ((attributes & TagAttributes.SelfClosing) > 0)
+                        if ((properties & TagProperties.SelfClosing) > 0)
                             break;
 
                         // If this is an RCData tag, get the text value for it and add it.
-                        if ((attributes & TagAttributes.RCData) > 0) {
+                        if ((properties & TagProperties.RCData) > 0) {
                             tok = reader.ReadRCData(tok);
                             dom.AddText(tag, tok);
                             break;
@@ -249,10 +261,20 @@ namespace XHtmlKit
 
                         break;
 
-                }
-                
+                }                
             }
+        }
 
+        private static Encoding CheckForNewEncoding(DomNode tag, DomBuilder<DomNode> dom)
+        {
+            // Parse out the 'charset' from the <meta> tag
+            string charset = dom.GetAttribute(tag, "charset");
+            string httpEquiv = dom.GetAttribute(tag, "http-equiv");
+            string content = dom.GetAttribute(tag, "content");
+            charset = EncodingUtils.GetCharset(charset, httpEquiv, content);
+
+            // Look up the encoding
+            return EncodingUtils.GetEncoding(charset);
         }
 
         // Read all attributes onto the given tag...
@@ -269,7 +291,7 @@ namespace XHtmlKit
                     continue;
 
                 // Make sure the attribute name is a valid XML name...
-                attrName = XmlConvert.EncodeLocalName(attrName);
+                attrName = EncodeLocalName(attrName);
 
                 // Values can have html encodings - we want them decoded 
                 attrValue = HtmlDecode(attrValue);
@@ -291,6 +313,31 @@ namespace XHtmlKit
             
         }
 
+        private static string EncodeLocalName(string name)
+        {
+            return ValidateXmlName(name) ? name : XmlConvert.EncodeLocalName(name);
+        }
+
+        private static bool ValidateXmlName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (i == 0 && !XmlConvert.IsStartNCNameChar(c))
+                    return false;
+
+                if (!XmlConvert.IsNCNameChar(c))
+                    return false;
+            }
+
+            return true;
+        }
+
         private static string HtmlDecode(string htmlText)
         {
 #if net20 || net35
@@ -300,14 +347,19 @@ namespace XHtmlKit
 #endif
         }
 
-        
+        private static bool IsHeadTag(string tag)
+        {
+            TagProperties attrs = TagProperties.None;
+            _tagProperties.TryGetValue(tag, out attrs);
+            bool isHeadTag = (attrs & TagProperties.IsHeadTag) > 0;
+            return isHeadTag;
+        }
 
         private static bool IsNullOrWhiteSpace(String value)
         {
             if (value == null) return true;
 
-            for (int i = 0; i < value.Length; i++)
-            {
+            for (int i = 0; i < value.Length; i++) {
                 if (!Char.IsWhiteSpace(value[i])) return false;
             }
 

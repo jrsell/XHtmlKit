@@ -44,20 +44,139 @@ namespace XHtmlKit.Network.Tests
                 var match = System.Text.RegularExpressions.Regex.Match(input, "charset\\s*=[\\s\"']*([^\\s\"' />]*)");
                 Assert.IsTrue(match.Success);
                 Assert.AreEqual("ISO-8859-1", match.Groups[1].Value);
-
             }
+        }
+
+        [Test]
+        public void Test_HtmlStream1()
+        {
+            int bufsize = 10;
+            MemoryStream baseStream = new MemoryStream(System.Text.Encoding.ASCII.GetBytes("abcdefghijklmnopqrstuvwxyz"));        
+            HtmlStream htmlstream = new HtmlStream(baseStream, bufsize);
+            byte[] buf = new byte[bufsize];
+
+            // Test reading up to and past the cache size...
+            // Initially, we cannot seek...
+            Assert.AreEqual(false, htmlstream.CanSeek);
+            htmlstream.Read(buf, 0, 5); // read first 5 bytes
+            Assert.AreEqual(true, htmlstream.CanSeek);
+            htmlstream.Read(buf, 5, 5); // read next 5 bytes
+            // Here, we have now read enough data into the cache that we should be able to seek back to the start...
+            Assert.AreEqual(true, htmlstream.CanSeek);
+            htmlstream.Read(buf, 0, 10); // read next 10 bytes
+            Assert.AreEqual(false, htmlstream.CanSeek);
+        }
+
+        [Test]
+        public void Test_HtmlStream2()
+        {
+            int bufsize = 10;
+            MemoryStream baseStream = new MemoryStream(System.Text.Encoding.ASCII.GetBytes("abcdefghijklmnopqrstuvwxyz"));
+            HtmlStream htmlstream = new HtmlStream(baseStream, bufsize);
+            byte[] buf = new byte[bufsize];
+
+            // Test reading up to cache size...
+            Assert.AreEqual(false, htmlstream.CanRewind);
+            htmlstream.Read(buf, 0, 10);
+            Assert.AreEqual(true, htmlstream.CanRewind);
+
+            // Seek to the beginning - after which we should no longer be able to seek
+            htmlstream.Rewind();
+            Assert.AreEqual(true, htmlstream.CanRewind);
+
+            // Ensure the base stream is still in position (i.e. didn't get touched)
+            Assert.AreEqual(10, baseStream.Position);
+
+            // We should now reading from the cache
+            byte[] buf2 = new byte[bufsize];
+            htmlstream.Read(buf2, 0, 5);
+            Assert.AreEqual("abcde", System.Text.Encoding.ASCII.GetString(buf2, 0, 5));
+
+            // Base stream is still in position
+            Assert.AreEqual(10, baseStream.Position);
+
+            // If we are reading from cache, we should be able to seek to beginning again 
+            Assert.AreEqual(true, htmlstream.CanRewind);
+            htmlstream.Read(buf2, 5, 5);
+            Assert.AreEqual("abcdefghij", System.Text.Encoding.ASCII.GetString(buf2));
+            Assert.AreEqual(true, htmlstream.CanRewind);
+
+            // Now move just past the cache size... We should no longer be able to seek to origin 
+            htmlstream.Read(buf2, 0, 1);
+            Assert.AreEqual(false, htmlstream.CanRewind);
+        }
+
+        /// <summary>
+        /// Make sure if we are reading from the cache, and we try
+        /// to read more than what exists in the cache, that we then
+        /// start dipping into the real stream...
+        /// </summary>
+        [Test]
+        public void Test_HtmlStream3()
+        {
+            int bufsize = 10;
+            MemoryStream baseStream = new MemoryStream(System.Text.Encoding.ASCII.GetBytes("abcdefghijklmnopqrstuvwxyz"));
+            HtmlStream htmlstream = new HtmlStream(baseStream, bufsize);
+            byte[] buf = new byte[bufsize];
+
+            // Test reading up to cache size...
+            Assert.AreEqual(false, htmlstream.CanRewind);
+            htmlstream.Read(buf, 0, 10);
+            Assert.AreEqual(true, htmlstream.CanRewind);
+
+            // Seek to the beginning 
+            htmlstream.Rewind();
+            Assert.AreEqual(true, htmlstream.CanRewind);
+
+            // Ensure the base stream is still in position (i.e. didn't get touched)
+            Assert.AreEqual(10, baseStream.Position);
+
+            // We should now reading from the cache, and in this case
+            // a little bit of the real stream...
+            byte[] buf2 = new byte[15];
+            htmlstream.Read(buf2, 0, 15);
+            Assert.AreEqual("abcdefghijklmno", System.Text.Encoding.ASCII.GetString(buf2));
+            Assert.IsFalse(htmlstream.CanRewind, "CanRewind should be false, since we should be past the cache");
+
+        }
+
+        [Test]
+        public void Test_HtmlStream4()
+        {
+            int bufsize = 10;
+            MemoryStream baseStream = new MemoryStream(System.Text.Encoding.ASCII.GetBytes("abcdefghijklmnopqrstuvwxyz"));
+            HtmlStream htmlstream = new HtmlStream(baseStream, bufsize);
+            byte[] buf = new byte[15];
+
+            // Test reading up to and beyond the cache size (we should still cache it all)...
+            Assert.AreEqual(false, htmlstream.CanRewind);
+            htmlstream.Read(buf, 0, buf.Length);
+            Assert.AreEqual(true, htmlstream.CanRewind);
+
+            // Seek to the beginning 
+            htmlstream.Rewind();
+            Assert.AreEqual(true, htmlstream.CanRewind);
+
+            // Ensure the base stream is still in position (i.e. didn't get touched)
+            Assert.AreEqual(15, baseStream.Position);
+
+            // We should now reading fully from the cache
+            byte[] buf2 = new byte[15];
+            htmlstream.Read(buf2, 0, 15);
+            Assert.AreEqual("abcdefghijklmno", System.Text.Encoding.ASCII.GetString(buf2));
+            Assert.IsTrue(htmlstream.CanRewind, "CanRewind should be true, since we should have expanded our cache");
         }
 
         //[Test]
         //public void Test_shift_jis()
         //{
-            //System.Text.Encoding enc = System.Text.Encoding.GetEncoding("shift_jis");
-            //System.Text.Encoding enc2 = System.Text.Encoding.GetEncoding("Windows-31J");
-            //bool mybreak = true;
+        //System.Text.Encoding enc = System.Text.Encoding.GetEncoding("shift_jis");
+        //System.Text.Encoding enc2 = System.Text.Encoding.GetEncoding("Windows-31J");
+        //bool mybreak = true;
         //}
 
         [Test]
-        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding01_iso_8859_1()
         {
             // ISO-8859-1: Example where the headers don't provide the encoding... The encoding should be found in the meta charset...
@@ -65,11 +184,22 @@ namespace XHtmlKit.Network.Tests
         }
 
         [Test]
-        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding01_big5()
         {
             // ISO-8859-1: Example where the headers don't provide the encoding... The encoding should be found in the meta charset...
-            await TestGetTextReaderAsync_ForEncoding("http://Momoshop.com.tw", "Orange : téléphones, forfaits, Internet, actualité, sport, video");
+            await TestGetTextReaderAsync_ForEncoding("http://Momoshop.com.tw", "momo購物網");
+        }
+
+        [Test]
+        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        public async Task DetectEncoding_utf_8_withWrongDefault()
+        {
+            // Google supplies utf-8 in headers
+            await TestGetTextReaderAsync_ForEncoding("http://google.com", "Google", new HtmlClientOptions {DefaultEncoding = System.Text.Encoding.ASCII } );
+
+            // These guys don't - but they have it in the <meta>
+            await TestGetTextReaderAsync_ForEncoding("http://Familydoctor.com.cn", "家庭医生在线_做中国专业的健康门户网站", new HtmlClientOptions { DefaultEncoding = System.Text.Encoding.ASCII });
         }
 
         [Test]
@@ -80,22 +210,15 @@ namespace XHtmlKit.Network.Tests
         }
 
         [Test]
-        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
+        //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding03_shift_jis()
         {
             // Shift JIS    (shift_jis)... an example where the encoding does not come out of the headers or the BOM...
             await TestGetTextReaderAsync_ForEncoding("http://www.itmedia.co.jp/", "IT総合情報ポータル「ITmedia」Home");
+            await TestGetTextReaderAsync_ForEncoding("http://kakaku.com/", "価格.com - 「買ってよかった」をすべてのひとに。");
         }
 
-        [Test]
-        [Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
-        public async Task DetectEncoding03_shift_jis_2()
-        {
-            // Shift JIS    (shift_jis)... an example where the encoding does not come out of the headers or the BOM...
-            await TestGetTextReaderAsync_ForEncoding("http://kakaku.com/", "Unknown...");
-        }
         
-
         [Test]
         //[Ignore("Ignore until we can detect encodings from the <meta> tags of the document itself")]
         public async Task DetectEncoding04_Windows_1252()
@@ -125,47 +248,34 @@ namespace XHtmlKit.Network.Tests
             await TestGetTextReaderAsync_ForEncoding("https://www.rakuten.co.jp/", "【楽天市場】Shopping is Entertainment! ： インターネット最大級の通信販売、通販オンラインショッピングコミュニティ");
         }
 
-        public async Task TestGetTextReaderAsync_ForEncoding(string url, string expectedTitle)
+        public async Task TestGetTextReaderAsync_ForEncoding(string url, string expectedTitle, HtmlClientOptions options = null)
         {
-            // Method 1 - use GetStringAsync() which does encoding detection...
-            //string s2 = await HttpClient.GetStringAsync(url);
-            //XmlDocument doc2 = new XmlDocument();
-            //doc2.LoadHtml(s2);
-            //string title2 = doc2.SelectSingleNode("//title/text()").InnerText;
-
-            // Method 2 - use our GetTextReaderAsync() which also does encoding detetion...
+            HtmlClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
             XHtmlQueryEngine engine = new XHtmlQueryEngine();
             XmlDocument doc1 = new XmlDocument();
 
             System.Text.Encoding initialEncoding=null;
-            //EncodingConfidence initialConfidence = EncodingConfidence.Tentative;
+            EncodingConfidence initialConfidence = EncodingConfidence.Tentative;
             System.Text.Encoding finalEncoding = null;
-            //EncodingConfidence finalConfidence = EncodingConfidence.Tentative;
+            EncodingConfidence finalConfidence = EncodingConfidence.Tentative;
 
             // Get the Html asynchronously and Parse it into an Xml Document            
-            using (TextReader htmlReader = await HtmlClient.GetTextReaderAsync(url)) {
+            using (HtmlTextReader textReader = await HtmlClient.GetHtmlTextReaderAsync(url, optionsToUse)) {
+                initialEncoding = textReader.CurrentEncoding;
+                initialConfidence = textReader.CurrentEncodingConfidence;
 
-                StreamReader streamReader = (StreamReader)htmlReader;
-                initialEncoding = streamReader.CurrentEncoding;
+                HtmlParser.DefaultParser.Parse(doc1, textReader, new HtmlParserOptions { BaseUrl = url } );
 
-                HtmlParser.DefaultParser.Parse(doc1, htmlReader, new HtmlParserOptions { BaseUrl = url } );
-
-                finalEncoding = streamReader.CurrentEncoding;
-                //finalConfidence = htmlReader.CurrentEncodingConfidence;
+                finalEncoding = textReader.CurrentEncoding;
+                finalConfidence = textReader.CurrentEncodingConfidence;
             }
 
             string title1 = doc1.SelectSingleNode("//title/text()").InnerText;
 
-            Console.WriteLine("Crawled: " + url + ", title: " + title1 + ", inital: " + initialEncoding.WebName + ", final: " + finalEncoding.WebName  );
+            Console.WriteLine("Crawled: " + url + ", title: " + title1 + ", default: " + optionsToUse.DefaultEncoding.WebName + " (detect=" + optionsToUse.DetectEncoding + "), inital: " + initialEncoding.WebName + " (" + initialConfidence + "), final: " + finalEncoding.WebName + " (" + finalConfidence + ")" );
 
             // Compare the titles of the pages to see if the encoding is picking up consistently between 
-            // GetStringAsync and GetTextReaderAsync
             Assert.AreEqual(expectedTitle, title1);
-
-            // Sanity check - compare against what we get from GetStringAsync()...
-            // Assert.AreEqual(title2, title1);
-
-            //Assert.AreEqual(s1.Length, s2.Length);
         }
 
         /// <summary>
@@ -257,13 +367,13 @@ namespace XHtmlKit.Network.Tests
 
         public async Task<int> DownloadPageUsingGetAsTextReaderAsync(string url)
         {
-            using (TextReader reader = await HtmlClient.GetTextReaderAsync(url))
+            using (HtmlTextReader reader = await HtmlClient.GetHtmlTextReaderAsync(url))
             {
                 int c = 0;
                 int charsRead = 0;
                 while (true)
                 {
-                    c = reader.Read();
+                    c = reader.BaseReader.Read();
                     if (c < 0) break;
                     charsRead++;
                 }

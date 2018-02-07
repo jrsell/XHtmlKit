@@ -19,7 +19,7 @@ namespace XHtmlKit
             XmlDocument doc = new XmlDocument();
             XmlDomBuilder dom = new XmlDomBuilder(doc);
             HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
-            TextReader reader = new StringReader(html);
+            HtmlTextReader reader = new HtmlTextReader(html);
             parser.Parse(dom, reader, options);
             return doc;
         }
@@ -34,7 +34,8 @@ namespace XHtmlKit
             XmlDocument doc = new XmlDocument();
             XmlDomBuilder dom = new XmlDomBuilder(doc);
             HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
-            parser.Parse(dom, htmlTextReader, options);
+            HtmlTextReader reader = new HtmlTextReader(htmlTextReader);
+            parser.Parse(dom, reader, options);
             return doc;
         }
 
@@ -43,10 +44,12 @@ namespace XHtmlKit
         public static async System.Threading.Tasks.Task<XmlDocument> LoadXmlDocumentAsync(string url)
         {
             XmlDocument xhtmlDoc = new XmlDocument();
+            XmlDomBuilder dom = new XmlDomBuilder(xhtmlDoc);
+            HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
 
             // Get the Html asynchronously and Parse it into an Xml Document            
-            using (TextReader htmlReader = await HtmlClient.GetTextReaderAsync(url))
-                HtmlParser.DefaultParser.Parse(xhtmlDoc, htmlReader, new HtmlParserOptions { BaseUrl = url });
+            using (HtmlTextReader htmlReader = await HtmlClient.GetHtmlTextReaderAsync(url))
+                parser.Parse(dom, htmlReader, new HtmlParserOptions { BaseUrl = url });
 
             return xhtmlDoc;
         }
@@ -60,7 +63,7 @@ namespace XHtmlKit
         {
             XDocument doc = new XDocument();
             XDomBuilder dom = new XDomBuilder(doc);
-            TextReader reader = new StringReader(html);
+            HtmlTextReader reader = new HtmlTextReader(html);
             HtmlStreamParser<XNode> parser = new HtmlStreamParser<XNode>();
             parser.Parse(dom, reader, options);
             return doc;
@@ -71,11 +74,12 @@ namespace XHtmlKit
             return LoadXDocument(htmlTextReader, new HtmlParserOptions());
         }
 
-        public static XDocument LoadXDocument(TextReader htmlTextReader, HtmlParserOptions options)
+        public static XDocument LoadXDocument(TextReader reader, HtmlParserOptions options)
         {
             XDocument doc = new XDocument();
             XDomBuilder dom = new XDomBuilder(doc);
             HtmlStreamParser<XNode> parser = new HtmlStreamParser<XNode>();
+            HtmlTextReader htmlTextReader = new HtmlTextReader(reader);
             parser.Parse(dom, htmlTextReader, options);
             return doc;
         }
@@ -85,7 +89,7 @@ namespace XHtmlKit
             XDocument xhtmlDoc = new XDocument();
 
             // Get the Html asynchronously and Parse it into an Xml Document            
-            using (TextReader htmlReader = await HtmlClient.GetTextReaderAsync(url))
+            using (HtmlTextReader htmlReader = await HtmlClient.GetHtmlTextReaderAsync(url))
             {
                 XDomBuilder dom = new XDomBuilder(xhtmlDoc);
                 HtmlStreamParser<XNode> parser = new HtmlStreamParser<XNode>();

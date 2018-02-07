@@ -66,7 +66,7 @@ namespace XHtmlKit.Tests
         {
             // Transfer content to XmlDoc...
             XmlDocument xhtmlDoc = new XmlDocument();
-            HtmlParser.DefaultParser.Parse(xhtmlDoc, new StringReader(_testHTML), new HtmlParserOptions());
+            HtmlParser.DefaultParser.Parse(xhtmlDoc, new HtmlTextReader(_testHTML), new HtmlParserOptions());
             Assert.AreEqual("html", xhtmlDoc.DocumentElement.Name);
             Console.WriteLine(xhtmlDoc.OuterXml);
         }

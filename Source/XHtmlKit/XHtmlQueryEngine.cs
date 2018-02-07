@@ -1,6 +1,5 @@
 ﻿#if !net20 
 
-using System.Net.Http;
 using System.Xml;
 using System.Collections;
 using System.Threading.Tasks;
@@ -111,7 +110,7 @@ namespace XHtmlKit
         {
             // Load content from html string
             XmlDocument xhtmlDoc = new XmlDocument();
-            this.Parser.Parse(xhtmlDoc, new StringReader(html), new HtmlParserOptions{ BaseUrl = originatingUrl });
+            this.Parser.Parse(xhtmlDoc, new HtmlTextReader(html), new HtmlParserOptions{ BaseUrl = originatingUrl });
 
             // Create a result element to mount results onto if none was supplied
             XmlElement resultElem = output;
@@ -142,7 +141,7 @@ namespace XHtmlKit
             XmlDocument xhtmlDoc = new XmlDocument();
 
             // Get the Html asynchronously and Parse it into an Xml Document            
-            using (TextReader htmlReader = await HtmlClient.GetTextReaderAsync(url))
+            using (HtmlTextReader htmlReader = await HtmlClient.GetHtmlTextReaderAsync(url))
                 this.Parser.Parse(xhtmlDoc, htmlReader, new HtmlParserOptions { BaseUrl = url } );
 
             return xhtmlDoc;

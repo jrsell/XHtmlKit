@@ -292,6 +292,38 @@ namespace XHtmlKit.Parser.Tests
 
         }
 
+        [Test]
+        public void CheckValidXmlName()
+        {
+
+            Assert.IsTrue(ValidateXmlName("_"));
+            Assert.IsFalse(ValidateXmlName(":foo"));
+            Assert.IsFalse(ValidateXmlName("a:foo"));
+            Assert.IsFalse(ValidateXmlName("a="));
+            Assert.IsFalse(ValidateXmlName(""));
+
+        }
+
+        private static bool ValidateXmlName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
+            for (int i=0; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (i == 0 && !XmlConvert.IsStartNCNameChar(c))
+                    return false;
+
+                if (!XmlConvert.IsNCNameChar(c))
+                    return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// A number of cases for weird or malformed html attributes.
         /// </summary>
@@ -344,6 +376,33 @@ namespace XHtmlKit.Parser.Tests
             // Ensure the comment shows up at the beginning, and the text at the end...
             Assert.IsTrue(doc.FirstChild.NodeType == XmlNodeType.Comment);
             Assert.AreEqual("some after text", doc.SelectSingleNode("//body").LastChild.InnerText);
+
+            // Linq check
+            LinqCompare(doc, html);
+
+        }
+
+        
+
+        /// <summary>
+        /// An html fragment should still parse into a proper html document.
+        /// Ensure that 'head', and 'body' are properly constructed.
+        /// </summary>
+        [Test]
+        public void TagWithInvalidXmlChar()
+        {
+            string html = @"
+            <html>
+                <body>
+                    <ahref='http://yyk.familydoctor.com.cn/1389/' target='_blank'>南方医科大学南方医院</a>
+                </body>
+            </html>";
+            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+
+            Console.WriteLine(ToFormattedString(doc));
+
+            // Ensure the 
+            Assert.AreEqual("ahref_x003D__x0027_http_x003A_", doc.SelectSingleNode("//body").FirstChild.Name);
 
             // Linq check
             LinqCompare(doc, html);
