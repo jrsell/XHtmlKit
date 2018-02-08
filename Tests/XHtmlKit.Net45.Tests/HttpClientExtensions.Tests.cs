@@ -5,7 +5,8 @@ using System.Xml;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using XHtmlKit;
+using XHtmlKit.Network;
+using XHtmlKit.Query;
 
 namespace XHtmlKit.Network.Tests
 {

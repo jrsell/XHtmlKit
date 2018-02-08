@@ -8,8 +8,7 @@ namespace NugetTest
     {
         static void Main(string[] args)
         {
-            XmlDocument doc = new XmlDocument();
-            HtmlParser.DefaultParser.LoadHtml(doc, "<html>hello world</html>");
+            XmlDocument doc = XHtmlLoader.LoadXmlDocument("<html>hello world</html>");
             Console.WriteLine(doc.OuterXml);
         }
     }

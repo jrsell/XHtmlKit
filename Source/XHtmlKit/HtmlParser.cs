@@ -6,6 +6,7 @@ namespace XHtmlKit
     public abstract class HtmlParser
     {
         public abstract void Parse(XmlDocument doc, HtmlTextReader htmlTextReader, HtmlParserOptions options);
+        public abstract void ParseFragment(XmlNode node, HtmlTextReader htmlTextReader, HtmlParserOptions options);
 
         private static HtmlParser _parser = new HtmlParserImpl();
         public static HtmlParser DefaultParser
@@ -13,25 +14,43 @@ namespace XHtmlKit
             get { return _parser; }
             set { _parser = value; }
         }
+
+        // Static overloads 
+        public static void Parse(XmlDocument doc, string html)
+        {
+            DefaultParser.Parse(doc, new HtmlTextReader(html), new HtmlParserOptions());
+        }
+
+        public static void Parse(XmlDocument doc, string html, HtmlParserOptions options)
+        {
+            DefaultParser.Parse(doc, new HtmlTextReader(html), options);
+        }
+
+        public static void Parse(XmlDocument doc, TextReader htmlTextReader)
+        {
+            DefaultParser.Parse(doc, new HtmlTextReader(htmlTextReader), new HtmlParserOptions());
+        }
+
+        public static void Parse(XmlDocument doc, TextReader htmlTextReader, HtmlParserOptions options)
+        {
+            DefaultParser.Parse(doc, new HtmlTextReader(htmlTextReader), options);
+        }
+
+        public static void ParseFragment(XmlNode node, string html)
+        {
+            DefaultParser.ParseFragment(node, new HtmlTextReader(html), new HtmlParserOptions());
+        }
+
+        public static void ParseFragment(XmlNode node, TextReader reader)
+        {
+            DefaultParser.ParseFragment(node, new HtmlTextReader(reader), new HtmlParserOptions());
+        }
+
+
     }
 
-    public class HtmlParserImpl : HtmlParser
+    internal class HtmlParserImpl : HtmlParser
     {
-        public void Parse(XmlDocument doc, string html)
-        {
-            Parse(doc, html, new HtmlParserOptions());
-        }
-
-        public void Parse(XmlDocument doc, string html, HtmlParserOptions options)
-        {
-            Parse(doc, new HtmlTextReader(html), options);
-        }
-
-        public void Parse(XmlDocument doc, TextReader htmlTextReader)
-        {
-            Parse(doc, new HtmlTextReader(htmlTextReader), new HtmlParserOptions());
-        }
-
         public override void Parse(XmlDocument doc, HtmlTextReader reader, HtmlParserOptions options)
         {
             XmlDomBuilder dom = new XmlDomBuilder(doc);
@@ -39,16 +58,10 @@ namespace XHtmlKit
             parser.Parse(dom, reader, options);
         }
 
-        public void ParseFragment(XmlNode node, string html)
-        {
-            ParseFragment(node, html, new HtmlParserOptions());
-        }
-
-        public void ParseFragment(XmlNode node, string html, HtmlParserOptions options)
+        public override void ParseFragment(XmlNode node, HtmlTextReader reader, HtmlParserOptions options)
         {
             XmlDomBuilder dom = new XmlDomBuilder(node);
-            HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
-            HtmlTextReader reader = new HtmlTextReader(html);
+            HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();            
             parser.Parse(dom, reader, options, InsersionMode.InBody);
         }
 

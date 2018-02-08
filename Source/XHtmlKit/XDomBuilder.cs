@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace XHtmlKit
 {
-    public class XDomBuilder : DomBuilder<XNode>
+    internal class XDomBuilder : DomBuilder<XNode>
     {
         private XDocument _doc;
         private XNode _rootNode;

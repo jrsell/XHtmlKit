@@ -25,11 +25,11 @@ namespace XHtmlKit
         Certain
     }
 
-    public class HtmlStreamMetaData
-    {
-        public string OriginatingUrl = String.Empty;
-        public List<Tuple<string, string>> HttpHeaders = new List<Tuple<string, string>>();
-    }
+    //public class HtmlStreamMetaData
+    //{
+    //    public string OriginatingUrl = String.Empty;
+    //    public List<KeyValuePair<string, string>> HttpHeaders = new List<KeyValuePair<string, string>>();
+    //}
 
     /// <summary>
     /// A fast & memory-efficient, HTML Tag Tokenizer.
@@ -41,9 +41,10 @@ namespace XHtmlKit
         private ParseState _parseState;
         private StringBuilder _currTok;
         private int _peekChar = 0;
-        HtmlStreamMetaData _metadata;
         private EncodingConfidence _encodingConfidence;
         private Encoding _initialEncoding;
+        private string _originatingUrl = string.Empty;
+        public List<KeyValuePair<string, string>> _originatingHttpHeaders = new List<KeyValuePair<string, string>>();
 
         public HtmlTextReader(string html)
         {
@@ -66,7 +67,6 @@ namespace XHtmlKit
             _htmlStream = stream is HtmlStream ? (HtmlStream)stream : null;
             _encodingConfidence = encodingConfidence;
             _reader = new StreamReader(stream, encoding, encodingConfidence == EncodingConfidence.Tentative);
-            _metadata = new HtmlStreamMetaData();
             _currTok = new StringBuilder();
             _parseState = ParseState.Text;
             _peekChar = _reader.Read();
@@ -78,7 +78,6 @@ namespace XHtmlKit
             _htmlStream = null;
             _encodingConfidence = EncodingConfidence.Certain;
             _reader = reader;
-            _metadata = new HtmlStreamMetaData();
             _currTok = new StringBuilder();
             _parseState = ParseState.Text;
             _peekChar = _reader.Read();
@@ -89,9 +88,15 @@ namespace XHtmlKit
             get { return _reader; }
         }
 
-        public HtmlStreamMetaData MetaData
+        public string OriginatingUrl
         {
-            get { return _metadata; }
+            get { return _originatingUrl; }
+            set { _originatingUrl = value; }
+        }
+
+        public List<KeyValuePair<string, string>> OriginatingHttpHeaders
+        {
+            get { return _originatingHttpHeaders; }
         }
 
         public bool CanRewind

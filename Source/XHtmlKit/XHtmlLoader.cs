@@ -3,6 +3,7 @@ using System.IO;
 
 #if !net20
 using System.Xml.Linq;
+using XHtmlKit.Network;
 #endif 
 
 namespace XHtmlKit

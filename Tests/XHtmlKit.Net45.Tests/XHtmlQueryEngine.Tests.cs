@@ -3,7 +3,7 @@ using System.IO;
 using NUnit.Framework;
 using System.Xml;
 using System.Threading.Tasks;
-using XHtmlKit;
+using XHtmlKit.Query;
 
 namespace XHtmlKit.Tests
 {

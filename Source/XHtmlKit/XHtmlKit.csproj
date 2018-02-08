@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-  <!-- net20; netstandard1.3-->
-    <TargetFramework>net45</TargetFramework> 
+    <TargetFrameworks>net20; net45; netstandard1.3</TargetFrameworks>
+    <!-- <TargetFramework>net45</TargetFramework> -->
     <AssemblyName>XHtmlKit</AssemblyName>
     <RootNamespace>XHtmlKit</RootNamespace>
     <SignAssembly>true</SignAssembly>
@@ -13,7 +13,7 @@
     <Product />
     <PackageOutputPath>$(SolutionDir)..\Packages</PackageOutputPath>
     <NoPackageAnalysis>true</NoPackageAnalysis> 
-    <Description>A lightweight Html parser for use with native XmlDocument, and XDocument. Fast, memory efficient, tolerant of malformed Html, and allows parsing from a stream.</Description>
+    <Description>A lightweight Html parser for use with native XmlDocument, and XDocument. Fast, memory efficient, tolerant of malformed Html, allows parsing from a stream, and has built-in encoding detection.</Description>
     <PackageTags>Html Parser XHtml Parsing Agility</PackageTags>
     <PackageReleaseNotes>Initial release of the XHtmlKit.</PackageReleaseNotes>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>

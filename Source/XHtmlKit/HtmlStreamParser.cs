@@ -10,7 +10,7 @@ namespace XHtmlKit
         public string BaseUrl = null;
     }
 
-    public enum InsersionMode
+    internal enum InsersionMode
     {
         BeforeHtml,
         BeforeHead,
@@ -18,7 +18,7 @@ namespace XHtmlKit
         InBody
     }
     
-    public class HtmlStreamParser<DomNode>
+    internal class HtmlStreamParser<DomNode>
     {
         private enum TagProperties
         {
@@ -64,8 +64,6 @@ namespace XHtmlKit
             {"wbr", TagProperties.SelfClosing},
             {"xmp", TagProperties.RCData}
         };
-
-        
 
         public void Parse(DomBuilder<DomNode> dom, HtmlTextReader reader, HtmlParserOptions options, InsersionMode mode = InsersionMode.BeforeHtml)
         {
@@ -210,7 +208,7 @@ namespace XHtmlKit
 
                         
                         // Create the new tag, add attributes, and append to DOM
-                        string tagName = EncodeLocalName(tok);
+                        string tagName = XmlConvert.EncodeLocalName(tok);
                         DomNode tag = dom.AddElement(currNode, tagName);
                         AddAttributes(dom, tag, tagName, reader, parserOptions.BaseUrl);
                         
@@ -291,7 +289,7 @@ namespace XHtmlKit
                     continue;
 
                 // Make sure the attribute name is a valid XML name...
-                attrName = EncodeLocalName(attrName);
+                attrName = XmlConvert.EncodeLocalName(attrName);
 
                 // Values can have html encodings - we want them decoded 
                 attrValue = HtmlDecode(attrValue);
@@ -311,31 +309,6 @@ namespace XHtmlKit
 
             }
             
-        }
-
-        private static string EncodeLocalName(string name)
-        {
-            return ValidateXmlName(name) ? name : XmlConvert.EncodeLocalName(name);
-        }
-
-        private static bool ValidateXmlName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                return false;
-            }
-
-            for (int i = 0; i < name.Length; i++)
-            {
-                char c = name[i];
-                if (i == 0 && !XmlConvert.IsStartNCNameChar(c))
-                    return false;
-
-                if (!XmlConvert.IsNCNameChar(c))
-                    return false;
-            }
-
-            return true;
         }
 
         private static string HtmlDecode(string htmlText)

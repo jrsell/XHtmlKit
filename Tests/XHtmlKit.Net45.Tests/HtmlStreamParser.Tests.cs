@@ -108,8 +108,7 @@ namespace XHtmlKit.Parser.Tests
                     <body foo='bar'>
                 </div></html>";
             XmlDocument doc = new XmlDocument();
-            HtmlParserImpl parser = new HtmlParserImpl();
-            parser.ParseFragment(doc, html );
+            HtmlParser.ParseFragment(doc, html);
 
             Console.WriteLine(doc.OuterXml);
 
@@ -133,8 +132,7 @@ namespace XHtmlKit.Parser.Tests
             XmlElement parent = doc.CreateElement("foo");
             doc.AppendChild(parent);
 
-            HtmlParserImpl parser = new HtmlParserImpl();
-            parser.ParseFragment(parent, html );
+            HtmlParser.ParseFragment(parent, html);
 
             Console.WriteLine( ToFormattedString(doc));
 
@@ -280,8 +278,7 @@ namespace XHtmlKit.Parser.Tests
         {
             string html = @"<settings id=01 class=red foo=bar />";
             XmlDocument doc = new XmlDocument();
-            HtmlParserImpl parser = new HtmlParserImpl();
-            parser.ParseFragment(doc, html);
+            HtmlParser.ParseFragment(doc, html);
 
             Console.WriteLine(ToFormattedString(doc));
 
@@ -290,38 +287,6 @@ namespace XHtmlKit.Parser.Tests
             Assert.AreEqual("red", settingsNode.Attributes["class"].Value);
             Assert.AreEqual("bar", settingsNode.Attributes["foo"].Value);
 
-        }
-
-        [Test]
-        public void CheckValidXmlName()
-        {
-
-            Assert.IsTrue(ValidateXmlName("_"));
-            Assert.IsFalse(ValidateXmlName(":foo"));
-            Assert.IsFalse(ValidateXmlName("a:foo"));
-            Assert.IsFalse(ValidateXmlName("a="));
-            Assert.IsFalse(ValidateXmlName(""));
-
-        }
-
-        private static bool ValidateXmlName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                return false;
-            }
-
-            for (int i=0; i < name.Length; i++)
-            {
-                char c = name[i];
-                if (i == 0 && !XmlConvert.IsStartNCNameChar(c))
-                    return false;
-
-                if (!XmlConvert.IsNCNameChar(c))
-                    return false;
-            }
-
-            return true;
         }
 
         /// <summary>

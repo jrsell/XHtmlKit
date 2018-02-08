@@ -3,9 +3,7 @@ using System.IO;
 
 namespace XHtmlKit
 {
-    
-
-    public class HtmlStream : Stream
+    internal class HtmlStream : Stream
     {
         const int MaxCacheSize = 4096;
         const int MinCacheSize = 0;

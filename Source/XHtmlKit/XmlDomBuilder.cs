@@ -3,7 +3,7 @@ using System.Xml;
 
 namespace XHtmlKit
 {
-    public abstract class DomBuilder<DomNode>
+    internal abstract class DomBuilder<DomNode>
     {
         public abstract DomNode RootNode { get; }
         public abstract DomNode AddElement(DomNode node, string elemName);
@@ -15,7 +15,7 @@ namespace XHtmlKit
         public abstract void RemoveAll(DomNode node);
     }
 
-    public class XmlDomBuilder : DomBuilder<XmlNode>
+    internal class XmlDomBuilder : DomBuilder<XmlNode>
     {
         private XmlDocument _doc;
         private XmlNode _rootNode;

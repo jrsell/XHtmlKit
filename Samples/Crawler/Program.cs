@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using XHtmlKit;
+using XHtmlKit.Network;
+
 using System.Xml;
 
 namespace Crawler
@@ -47,8 +49,7 @@ namespace Crawler
             {
                 string settingsHtml = "<settings " + string.Join(" ", args) + " />";
                 XmlDocument settingsDoc = new XmlDocument();
-                HtmlParserImpl parser = new HtmlParserImpl();
-                parser.ParseFragment(settingsDoc, settingsHtml);
+                HtmlParser.ParseFragment(settingsDoc, settingsHtml);
                 XmlElement settings = settingsDoc.DocumentElement;
 
                 crawlerSettings.Url = (settings.Attributes["Url"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["Url"].Value)) ? settings.Attributes["Url"].Value.Trim() : crawlerSettings.Url;

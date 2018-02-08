@@ -5,8 +5,9 @@ using System.Collections;
 using System.Threading.Tasks;
 using System.IO;
 using System.Collections.Generic;
+using XHtmlKit.Network;
 
-namespace XHtmlKit
+namespace XHtmlKit.Query
 {
     /// <summary>
     /// Adds extensions to the XmlDocument class for querying the document
