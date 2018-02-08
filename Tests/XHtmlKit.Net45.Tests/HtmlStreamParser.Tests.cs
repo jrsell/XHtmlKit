@@ -22,10 +22,10 @@ namespace XHtmlKit.Parser.Tests
             return sb.ToString();
         }
 
-        public static void LinqCompare(XmlDocument doc, string html, string baseUrl=null)
+        public static void LinqCompare(XmlDocument doc, string html, HtmlParserOptions options = null)
         {
             // Linq check
-            XDocument xdoc = XHtmlLoader.LoadXDocument(html, new HtmlParserOptions { BaseUrl = baseUrl } );
+            XDocument xdoc = XHtmlLoader.LoadXDocument(html, options);
             string xdocOuterXml = xdoc.ToString(SaveOptions.DisableFormatting);
             Console.WriteLine(xdocOuterXml);
             Assert.AreEqual(doc.OuterXml, xdocOuterXml);
@@ -231,7 +231,8 @@ namespace XHtmlKit.Parser.Tests
 
             </body></html>";
             string baseUrl = "http://www.foobar.com/products/cat1/someprod.html";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html, new HtmlParserOptions { BaseUrl = baseUrl });
+            HtmlParserOptions options = new HtmlParserOptions { BaseUrl = baseUrl };
+            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html, options );
             
             Console.WriteLine(doc.OuterXml);
 
@@ -244,7 +245,7 @@ namespace XHtmlKit.Parser.Tests
             Assert.AreEqual("http://www.foobar.com/wiki/Wikipedia:Introduction", doc.SelectSingleNode("//a[@id='6']/@href").Value);
 
             // Linq check
-            LinqCompare(doc, html, baseUrl);
+            LinqCompare(doc, html, options);
 
         }
 
@@ -344,10 +345,33 @@ namespace XHtmlKit.Parser.Tests
 
             // Linq check
             LinqCompare(doc, html);
-
         }
 
-        
+        /// <summary>
+        /// Test putting fragments before and after the html tags. 
+        /// </summary>
+        [Test]
+        public void FullyQualifyUrls2()
+        {
+            string html = @"
+            <html>
+            <body>
+                <a href='/bakery/bread.html'>Bread</a>
+            </body>
+            </html>";
+
+            HtmlParserOptions options = new HtmlParserOptions { BaseUrl = "http://foobar.com", FullyQualifyUrls = false };
+            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html, options);
+            Console.WriteLine(doc.OuterXml);
+
+            // Ensure the comment shows up at the beginning, and the text at the end...
+            Assert.AreEqual("/bakery/bread.html", doc.SelectSingleNode("//a/@href").Value, "Ensure we don't fully qualify. We set flag to false");
+
+            // Linq check
+            LinqCompare(doc, html, options);
+        }
+
+
 
         /// <summary>
         /// An html fragment should still parse into a proper html document.

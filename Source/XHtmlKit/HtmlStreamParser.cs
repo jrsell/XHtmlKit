@@ -7,7 +7,27 @@ namespace XHtmlKit
 {
     public class HtmlParserOptions
     {
+        /// <summary>
+        /// If a BaseUrl is supplied, and FullyQualifyUrls is set to 'True'
+        /// the parser will use the BaseUrl to fully Qualify Urls encountered in 
+        /// a 'href' and  img 'src' attributes. 
+        /// </summary>
         public string BaseUrl = null;
+
+        /// <summary>
+        /// Used in conjunction with 'BaseUrl' to instruct the parser to 
+        /// Fully qualify Urls encountered in a 'href' and  img 'src' attributes. 
+        /// </summary>
+        public bool FullyQualifyUrls = true;
+
+        /// <summary>
+        /// When 'IncludeMetaData' is set to true, all of the metadata
+        /// available to the html parser is inserted into the head tag
+        /// of the returned XHtml document as additional meta tags. The metadata 
+        /// includes thing such as: the DetectedEncoding, the OriginatingUrl, 
+        /// all of the HttpHeaders parsing time etc.
+        /// </summary>
+        public bool IncludeMetaData = false;
     }
 
     internal enum InsersionMode
@@ -68,6 +88,9 @@ namespace XHtmlKit
         public void Parse(DomBuilder<DomNode> dom, HtmlTextReader reader, HtmlParserOptions options, InsersionMode mode = InsersionMode.BeforeHtml)
         {
             HtmlParserOptions parserOptions = options == null ? new HtmlParserOptions() : options;
+            DateTime startTime = DateTime.Now;
+
+            Beginning:
 
             // DOM Node pointers
             DomNode currNode = dom.RootNode;
@@ -210,7 +233,7 @@ namespace XHtmlKit
                         // Create the new tag, add attributes, and append to DOM
                         string tagName = XmlConvert.EncodeLocalName(tok);
                         DomNode tag = dom.AddElement(currNode, tagName);
-                        AddAttributes(dom, tag, tagName, reader, parserOptions.BaseUrl);
+                        AddAttributes(dom, tag, tagName, reader, (parserOptions.FullyQualifyUrls ? parserOptions.BaseUrl : null) );
                         
                         // If this is a meta tag, and our underlying stream
                         // lets us ReWind, and we are tentative about the encoding, then check for a new charset
@@ -221,11 +244,10 @@ namespace XHtmlKit
                             // If we found a new encoding encoding, we will need to start over!
                             if (encoding != null /* TODO: and if it is different from current one ? */)
                             {
-                                // Start over!
+                                // Start over from the beginning!
                                 reader.Rewind(encoding); // Rewind underlying stream, set new encoding
                                 dom.RemoveAll(dom.RootNode); // Clear DOM so far
-                                Parse(dom, reader, options, mode); // Re-parse from scratch
-                                return;
+                                goto Beginning;
                             }
                         }                        
 
@@ -261,6 +283,42 @@ namespace XHtmlKit
 
                 }                
             }
+
+            DateTime endTime = DateTime.Now;
+
+            // See if the user want's to include metadata in <head>
+            if (parserOptions.IncludeMetaData && headNode != null)
+            {
+                // Parse Time
+                DomNode totalMillisecondsNode = dom.AddElement(headNode, "meta");
+                dom.AddAttribute(totalMillisecondsNode, "source", "HtmlStreamParser");
+                dom.AddAttribute(totalMillisecondsNode, "totalMilliseconds", endTime.Subtract(startTime).TotalMilliseconds.ToString() );
+
+                // Originating URL
+                DomNode originatingUrlNode = dom.AddElement(headNode, "meta");
+                dom.AddAttribute(originatingUrlNode, "source", "HtmlStreamParser");
+                dom.AddAttribute(originatingUrlNode, "originatingUrl", reader.OriginatingUrl);
+
+                // Detected Encodings
+                DomNode encodingNode = dom.AddElement(headNode, "meta");
+                dom.AddAttribute(encodingNode, "source", "HtmlStreamParser");
+                dom.AddAttribute(encodingNode, "encoding", reader.CurrentEncoding.WebName);
+                dom.AddAttribute(encodingNode, "confidence", reader.CurrentEncodingConfidence.ToString());
+
+                DomNode encodingNode2 = dom.AddElement(headNode, "meta");
+                dom.AddAttribute(encodingNode2, "source", "HtmlStreamParser");
+                dom.AddAttribute(encodingNode2, "initalEncoding", reader.InitialEncoding.WebName);
+                dom.AddAttribute(encodingNode2, "confidence", reader.InitialEncodingConfidence.ToString());
+
+                // Add headers metadata
+                foreach (var header in reader.OriginatingHttpHeaders) {
+                    DomNode headerNode = dom.AddElement(headNode, "meta");
+                    dom.AddAttribute(headerNode, "source", "HttpHeaders");
+                    dom.AddAttribute(headerNode, "name", header.Key);
+                    dom.AddAttribute(headerNode, "content", header.Value);
+                }
+
+            }
         }
 
         private static Encoding CheckForNewEncoding(DomNode tag, DomBuilder<DomNode> dom)
@@ -294,8 +352,8 @@ namespace XHtmlKit
                 // Values can have html encodings - we want them decoded 
                 attrValue = HtmlDecode(attrValue);
 
-                // Fully-qualify UrlAttributes
-                if (originatingUrl != null &&
+                // Fully-qualify UrlAttributes if a BaseUrl was supplied
+                if (!string.IsNullOrEmpty(originatingUrl) &&
                     ((tagName == "a" && attrName == "href") || (tagName == "img" && attrName == "src")) &&
                         !attrValue.Contains("://"))
                 {

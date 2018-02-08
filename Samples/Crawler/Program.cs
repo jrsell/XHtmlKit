@@ -23,6 +23,7 @@ namespace Crawler
         public string Encoding = null; 
         public int Depth = 0;
         public string UrlFilter = "";
+        public bool IncludeMetaData = false;
     }
 
     class Program
@@ -57,6 +58,7 @@ namespace Crawler
                 crawlerSettings.UrlFilter = (settings.Attributes["UrlFilter"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["UrlFilter"].Value)) ? settings.Attributes["UrlFilter"].Value.Trim() : crawlerSettings.UrlFilter;
                 crawlerSettings.OutputDir = (settings.Attributes["OutputDir"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["OutputDir"].Value)) ? settings.Attributes["OutputDir"].Value.Trim() : crawlerSettings.OutputDir;
                 crawlerSettings.Encoding = (settings.Attributes["Encoding"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["Encoding"].Value)) ? settings.Attributes["Encoding"].Value.Trim() : crawlerSettings.Encoding;
+                crawlerSettings.IncludeMetaData = (settings.Attributes["IncludeMetaData"] != null);
 
                 // See if we wish to override encoding settings...
                 HtmlClient.Options.DetectEncoding = crawlerSettings.Encoding == null;
@@ -87,7 +89,12 @@ namespace Crawler
                 XmlDocument xhtmlDoc;
                 try
                 {
-                    xhtmlDoc = XHtmlLoader.LoadXmlDocumentAsync(currentUrl.Url).Result;
+                    HtmlParserOptions options = new HtmlParserOptions
+                    {
+                        IncludeMetaData = crawlerSettings.IncludeMetaData
+                    };
+
+                    xhtmlDoc = XHtmlLoader.LoadXmlDocumentAsync(currentUrl.Url, options).Result;
                     Console.WriteLine(", [OK]");                        
                 }
                 catch (Exception ex)

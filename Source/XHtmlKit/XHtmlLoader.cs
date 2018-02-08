@@ -41,16 +41,23 @@ namespace XHtmlKit
         }
 
 #if !net20
-
         public static async System.Threading.Tasks.Task<XmlDocument> LoadXmlDocumentAsync(string url)
         {
+            return await LoadXmlDocumentAsync(url, new HtmlParserOptions());
+        }
+
+        public static async System.Threading.Tasks.Task<XmlDocument> LoadXmlDocumentAsync(string url, HtmlParserOptions options)
+        {
+            HtmlParserOptions optionsToUse = options == null ? new HtmlParserOptions() : options;
+            optionsToUse.BaseUrl = string.IsNullOrEmpty(optionsToUse.BaseUrl) ? url : optionsToUse.BaseUrl;
+
             XmlDocument xhtmlDoc = new XmlDocument();
             XmlDomBuilder dom = new XmlDomBuilder(xhtmlDoc);
             HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
 
             // Get the Html asynchronously and Parse it into an Xml Document            
             using (HtmlTextReader htmlReader = await HtmlClient.GetHtmlTextReaderAsync(url))
-                parser.Parse(dom, htmlReader, new HtmlParserOptions { BaseUrl = url });
+                parser.Parse(dom, htmlReader, optionsToUse);
 
             return xhtmlDoc;
         }
@@ -87,6 +94,14 @@ namespace XHtmlKit
 
         public static async System.Threading.Tasks.Task<XDocument> LoadXDocumentAsync(string url)
         {
+            return await LoadXDocumentAsync(url, new HtmlParserOptions());
+        }
+
+        public static async System.Threading.Tasks.Task<XDocument> LoadXDocumentAsync(string url, HtmlParserOptions options)
+        {
+            HtmlParserOptions optionsToUse = options == null ? new HtmlParserOptions() : options;
+            optionsToUse.BaseUrl = string.IsNullOrEmpty(optionsToUse.BaseUrl) ? url : optionsToUse.BaseUrl;
+
             XDocument xhtmlDoc = new XDocument();
 
             // Get the Html asynchronously and Parse it into an Xml Document            
@@ -94,7 +109,7 @@ namespace XHtmlKit
             {
                 XDomBuilder dom = new XDomBuilder(xhtmlDoc);
                 HtmlStreamParser<XNode> parser = new HtmlStreamParser<XNode>();
-                parser.Parse(dom, htmlReader, new HtmlParserOptions());
+                parser.Parse(dom, htmlReader, optionsToUse);
             }
             return xhtmlDoc;
         }

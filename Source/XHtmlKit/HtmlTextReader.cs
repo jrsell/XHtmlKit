@@ -41,7 +41,8 @@ namespace XHtmlKit
         private ParseState _parseState;
         private StringBuilder _currTok;
         private int _peekChar = 0;
-        private EncodingConfidence _encodingConfidence;
+        private EncodingConfidence _currentEncodingConfidence;
+        private EncodingConfidence _initialEncodingConfidence;
         private Encoding _initialEncoding;
         private string _originatingUrl = string.Empty;
         public List<KeyValuePair<string, string>> _originatingHttpHeaders = new List<KeyValuePair<string, string>>();
@@ -56,28 +57,31 @@ namespace XHtmlKit
             Init(reader);
         }
 
-        public HtmlTextReader(Stream stream, Encoding encoding, EncodingConfidence encodingConfidence)
+        private void Init(TextReader reader)
         {
-            Init(stream, encoding, encodingConfidence);
-        }
-
-        private void Init(Stream stream, Encoding encoding, EncodingConfidence encodingConfidence)
-        {
-            _initialEncoding = encoding;
-            _htmlStream = stream is HtmlStream ? (HtmlStream)stream : null;
-            _encodingConfidence = encodingConfidence;
-            _reader = new StreamReader(stream, encoding, encodingConfidence == EncodingConfidence.Tentative);
+            _initialEncoding = (_reader is StreamReader) ? ((StreamReader)_reader).CurrentEncoding : null;
+            _currentEncodingConfidence = reader is StringReader ? EncodingConfidence.Irrelevant : EncodingConfidence.Certain;
+            _initialEncodingConfidence = _currentEncodingConfidence;
+            _htmlStream = null;
+            _reader = reader;
             _currTok = new StringBuilder();
             _parseState = ParseState.Text;
             _peekChar = _reader.Read();
         }
 
-        private void Init(TextReader reader)
+        public HtmlTextReader(Stream stream, Encoding encoding, EncodingConfidence encodingConfidence)
         {
-            _initialEncoding = (reader is StreamReader) ? ((StreamReader)reader).CurrentEncoding : null;
-            _htmlStream = null;
-            _encodingConfidence = EncodingConfidence.Certain;
-            _reader = reader;
+            _initialEncoding = encoding;
+            _initialEncodingConfidence = encodingConfidence;
+
+            Init(stream, encoding, encodingConfidence);
+        }
+
+        private void Init(Stream stream, Encoding encoding, EncodingConfidence encodingConfidence)
+        {
+            _currentEncodingConfidence = encodingConfidence;
+            _htmlStream = stream is HtmlStream ? (HtmlStream)stream : null;
+            _reader = new StreamReader(stream, encoding, encodingConfidence == EncodingConfidence.Tentative);
             _currTok = new StringBuilder();
             _parseState = ParseState.Text;
             _peekChar = _reader.Read();
@@ -117,6 +121,30 @@ namespace XHtmlKit
         }
 
         /// <summary>
+        /// Returns the encoding the reader was initialized with. The
+        /// CurrentEncoding may change during the course of reading from the 
+        /// underlying stream - such as when Rewind() is called with a different
+        /// encoding.
+        /// </summary>
+        public Encoding InitialEncoding
+        {
+            get { return _initialEncoding; }
+        }
+
+        /// <summary>
+        /// Returns the EncodingConfidence that the HtmlTextReader was 
+        /// initialzed with. If an encoding was supplied by an out-of-band 
+        /// source (such as an HttpHeader, or a hard-coded user-supplied
+        /// value) then the confidence will be Certain. If the HtmlTextReader
+        /// was initialized by a String, the EncodingConfidence is 
+        /// Irrelevant, since this is a stream of Unicode characters.
+        /// </summary>
+        public EncodingConfidence InitialEncodingConfidence
+        {
+            get { return _initialEncodingConfidence; }
+        }
+
+        /// <summary>
         /// Returns the current encoding being used on the underlying stream
         /// </summary>
         public Encoding CurrentEncoding
@@ -124,9 +152,25 @@ namespace XHtmlKit
             get { return (_reader is StreamReader) ? ((StreamReader)_reader).CurrentEncoding : null; }
         }
 
+        /// <summary>
+        /// Returns the current encoding confidence for the underlying stream
+        /// </summary>
         public EncodingConfidence CurrentEncodingConfidence
         {
-            get { return _encodingConfidence; }
+            get {
+
+                // Here is a special case: we initialized the stream with a Tentative
+                // Encoding, and the underlying StringReader detected the Encoding from the
+                // Byte order mark... In this case - we will say that the current encoding
+                // is Certain - (i.e. we will ignore any future <meta> charset) data.
+                if (_currentEncodingConfidence == EncodingConfidence.Tentative &&
+                    !object.Equals(_initialEncoding, CurrentEncoding))
+                {
+                    return EncodingConfidence.Certain;
+                }                    
+
+                return _currentEncodingConfidence;
+            }
         }
 
         public ParseState ParseState

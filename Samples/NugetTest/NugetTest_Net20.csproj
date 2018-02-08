@@ -55,7 +55,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="XHtmlKit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f429068876583447, processorArchitecture=MSIL">
-      <HintPath>..\packages\XHtmlKit.1.0.0-beta\lib\net45\XHtmlKit.dll</HintPath>
+      <HintPath>..\packages\XHtmlKit.1.0.0\lib\net45\XHtmlKit.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
