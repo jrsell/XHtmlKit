@@ -60,7 +60,7 @@ namespace XHtmlKit
         private void Init(TextReader reader)
         {
             _initialEncoding = (_reader is StreamReader) ? ((StreamReader)_reader).CurrentEncoding : null;
-            _currentEncodingConfidence = reader is StringReader ? EncodingConfidence.Irrelevant : EncodingConfidence.Certain;
+            _currentEncodingConfidence = reader is StringReader ? EncodingConfidence.Irrelevant : EncodingConfidence.Tentative;
             _initialEncodingConfidence = _currentEncodingConfidence;
             _htmlStream = null;
             _reader = reader;

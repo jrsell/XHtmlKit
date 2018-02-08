@@ -108,7 +108,7 @@ namespace XHtmlKit.Parser.Tests
                     <body foo='bar'>
                 </div></html>";
             XmlDocument doc = new XmlDocument();
-            HtmlParser.ParseFragment(doc, html);
+            XHtmlLoader.LoadXmlFragment(doc, html);
 
             Console.WriteLine(doc.OuterXml);
 
@@ -132,7 +132,7 @@ namespace XHtmlKit.Parser.Tests
             XmlElement parent = doc.CreateElement("foo");
             doc.AppendChild(parent);
 
-            HtmlParser.ParseFragment(parent, html);
+            XHtmlLoader.LoadXmlFragment(parent, html);
 
             Console.WriteLine( ToFormattedString(doc));
 
@@ -279,7 +279,7 @@ namespace XHtmlKit.Parser.Tests
         {
             string html = @"<settings id=01 class=red foo=bar />";
             XmlDocument doc = new XmlDocument();
-            HtmlParser.ParseFragment(doc, html);
+            XHtmlLoader.LoadXmlFragment(doc, html);
 
             Console.WriteLine(ToFormattedString(doc));
 

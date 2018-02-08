@@ -15,6 +15,7 @@ namespace XHtmlKit
             set { _parser = value; }
         }
 
+        /*
         // Static overloads 
         public static void Parse(XmlDocument doc, string html)
         {
@@ -45,7 +46,7 @@ namespace XHtmlKit
         {
             DefaultParser.ParseFragment(node, new HtmlTextReader(reader), new HtmlParserOptions());
         }
-
+        */
 
     }
 

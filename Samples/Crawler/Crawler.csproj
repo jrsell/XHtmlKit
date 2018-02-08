@@ -8,9 +8,10 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Crawler</RootNamespace>
     <AssemblyName>Crawler</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -50,7 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Source\XHtmlKit\XHtmlKit.csproj">
-      <Project>{56ca0aba-f68c-4948-b1b4-cd57ccab4e9b}</Project>
+      <Project>{9beee864-d212-4922-b190-2224f3205909}</Project>
       <Name>XHtmlKit</Name>
     </ProjectReference>
   </ItemGroup>

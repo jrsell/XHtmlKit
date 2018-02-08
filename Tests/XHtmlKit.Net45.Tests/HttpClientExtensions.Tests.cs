@@ -252,7 +252,6 @@ namespace XHtmlKit.Network.Tests
         public async Task TestGetTextReaderAsync_ForEncoding(string url, string expectedTitle, HtmlClientOptions options = null)
         {
             HtmlClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
-            XHtmlQueryEngine engine = new XHtmlQueryEngine();
             XmlDocument doc1 = new XmlDocument();
 
             System.Text.Encoding initialEncoding=null;

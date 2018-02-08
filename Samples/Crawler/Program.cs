@@ -50,26 +50,27 @@ namespace Crawler
             {
                 string settingsHtml = "<settings " + string.Join(" ", args) + " />";
                 XmlDocument settingsDoc = new XmlDocument();
-                HtmlParser.ParseFragment(settingsDoc, settingsHtml);
+                XHtmlLoader.LoadXmlFragment(settingsDoc, settingsHtml.ToLower());
                 XmlElement settings = settingsDoc.DocumentElement;
 
-                crawlerSettings.Url = (settings.Attributes["Url"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["Url"].Value)) ? settings.Attributes["Url"].Value.Trim() : crawlerSettings.Url;
-                crawlerSettings.Depth = settings.Attributes["Depth"] != null  ?  Convert.ToInt32(settings.Attributes["Depth"].Value ) : crawlerSettings.Depth;
-                crawlerSettings.UrlFilter = (settings.Attributes["UrlFilter"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["UrlFilter"].Value)) ? settings.Attributes["UrlFilter"].Value.Trim() : crawlerSettings.UrlFilter;
-                crawlerSettings.OutputDir = (settings.Attributes["OutputDir"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["OutputDir"].Value)) ? settings.Attributes["OutputDir"].Value.Trim() : crawlerSettings.OutputDir;
-                crawlerSettings.Encoding = (settings.Attributes["Encoding"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["Encoding"].Value)) ? settings.Attributes["Encoding"].Value.Trim() : crawlerSettings.Encoding;
-                crawlerSettings.IncludeMetaData = (settings.Attributes["IncludeMetaData"] != null);
-
-                // See if we wish to override encoding settings...
-                HtmlClient.Options.DetectEncoding = crawlerSettings.Encoding == null;
-                HtmlClient.Options.DefaultEncoding = crawlerSettings.Encoding != null ? System.Text.Encoding.GetEncoding(crawlerSettings.Encoding) : HtmlClient.Options.DefaultEncoding;
+                crawlerSettings.Url = (settings.Attributes["url"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["url"].Value)) ? settings.Attributes["url"].Value.Trim() : crawlerSettings.Url;
+                crawlerSettings.Depth = settings.Attributes["depth"] != null  ?  Convert.ToInt32(settings.Attributes["depth"].Value ) : crawlerSettings.Depth;
+                crawlerSettings.UrlFilter = (settings.Attributes["urlfilter"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["urlfilter"].Value)) ? settings.Attributes["urlfilter"].Value.Trim() : crawlerSettings.UrlFilter;
+                crawlerSettings.OutputDir = (settings.Attributes["outputdir"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["outputdir"].Value)) ? settings.Attributes["outputdir"].Value.Trim() : crawlerSettings.OutputDir;
+                crawlerSettings.Encoding = (settings.Attributes["encoding"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["encoding"].Value)) ? settings.Attributes["encoding"].Value.Trim() : crawlerSettings.Encoding;
+                crawlerSettings.IncludeMetaData = (settings.Attributes["includemetadata"] != null);
             }
+
+            // Gather HtmlParser and HtmlClient options
+            XHtmlLoaderOptions xhtmlLoaderOptions = new XHtmlLoaderOptions();
+            xhtmlLoaderOptions.ParserOptions.IncludeMetaData = crawlerSettings.IncludeMetaData;
+            xhtmlLoaderOptions.ClientOptions.DetectEncoding = (crawlerSettings.Encoding == null);
+            xhtmlLoaderOptions.ClientOptions.DefaultEncoding = crawlerSettings.Encoding != null ? System.Text.Encoding.GetEncoding(crawlerSettings.Encoding) : xhtmlLoaderOptions.ClientOptions.DefaultEncoding;
 
             // Create 'todo' and 'done' lists
             Queue<Link> urlsToCrawl = new Queue<Link>();
             HashSet<string> urlsCrawled = new HashSet<string>();
             Uri baseUri = new Uri(crawlerSettings.Url.ToLower());
-
 
             // Add the root url to the todo list
             urlsToCrawl.Enqueue(new Link { Url = crawlerSettings.Url });
@@ -89,12 +90,7 @@ namespace Crawler
                 XmlDocument xhtmlDoc;
                 try
                 {
-                    HtmlParserOptions options = new HtmlParserOptions
-                    {
-                        IncludeMetaData = crawlerSettings.IncludeMetaData
-                    };
-
-                    xhtmlDoc = XHtmlLoader.LoadXmlDocumentAsync(currentUrl.Url, options).Result;
+                    xhtmlDoc = XHtmlLoader.LoadXmlDocumentAsync(currentUrl.Url, xhtmlLoaderOptions).Result;
                     Console.WriteLine(", [OK]");                        
                 }
                 catch (Exception ex)
