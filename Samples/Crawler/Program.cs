@@ -160,6 +160,9 @@ namespace Crawler
 
                     // Get the sub-link
                     string sublink = subLinkElem.Attributes["href"].InnerText;
+                    if (!Uri.IsWellFormedUriString(sublink.ToLower(), UriKind.RelativeOrAbsolute))
+                        continue;
+
                     Uri subUri = new Uri(sublink.ToLower());
 
                     // Don't add links that don't match the UrlFilter

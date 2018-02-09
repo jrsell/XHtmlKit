@@ -49,6 +49,27 @@ namespace XHtmlKit
             RCData = 8,
         }
 
+        // Dictionary of tag attributes that are URL's (when found inside the given tags)
+        private static Dictionary<string, Dictionary<string, bool>> _urlAttributes = new Dictionary<string, Dictionary<string, bool>>
+        {
+            {"href", new Dictionary<string, bool> { {"a", true}, {"area", true}, {"base", true}, {"link", true}}},
+            {"src", new Dictionary<string, bool> { {"frame", true}, {"iframe", true}, {"img", true}, {"input", true}, {"script", true}, {"audio", true}, {"embed", true}, {"source", true}, {"track", true}, {"video", true}}},
+            {"action", new Dictionary<string, bool> { {"form", true}}},
+            {"background", new Dictionary<string, bool> { {"body", true}}},
+            {"cite", new Dictionary<string, bool> { {"blockquote", true}, {"del", true}, {"ins", true}, {"q", true}}},
+            {"classid", new Dictionary<string, bool> { {"object", true}}},
+            {"codebase",new Dictionary<string, bool> {  {"applet", true}, {"object", true}}},
+            {"data", new Dictionary<string, bool> { {"object", true}}},
+            {"formaction", new Dictionary<string, bool> { {"button", true}, {"input", true}}},
+            {"icon", new Dictionary<string, bool> { {"command", true}}},
+            {"longdesc", new Dictionary<string, bool> { {"frame", true}, {"iframe", true}, {"img", true}}},
+            {"manifest", new Dictionary<string, bool> { {"html", true}}},
+            {"poster", new Dictionary<string, bool> { {"video", true}}},
+            {"profile", new Dictionary<string, bool> { {"head", true}}},
+            {"usemap", new Dictionary<string, bool> { {"img", true}, {"input", true}, {"object", true}} }
+        };
+
+        // Dictionary of properties associated with the given tag
         private static Dictionary<string, TagProperties> _tagProperties = new Dictionary<string, TagProperties>()
         {
             {"area", TagProperties.SelfClosing},
@@ -357,13 +378,15 @@ namespace XHtmlKit
                 attrValue = HtmlDecode(attrValue);
 
                 // Fully-qualify UrlAttributes if a BaseUrl was supplied
-                if (!string.IsNullOrEmpty(originatingUrl) &&
-                    ((tagName == "a" && attrName == "href") || (tagName == "img" && attrName == "src")) &&
-                        !attrValue.Contains("://"))
-                {
-                    Uri baseUri = new Uri(originatingUrl);
-                    Uri compbinedUri = new Uri(baseUri, attrValue);
-                    attrValue = compbinedUri.ToString();
+                if (!string.IsNullOrEmpty(originatingUrl)) {
+                    // See if the given attribute is a url attribute inside the given tag
+                    Dictionary<string, bool> relevantTags = null;
+                    _urlAttributes.TryGetValue(attrName, out relevantTags);
+                    if (relevantTags != null && relevantTags.ContainsKey(tagName) && !attrValue.Contains("://")) {
+                        Uri baseUri = new Uri(originatingUrl);
+                        Uri compbinedUri = new Uri(baseUri, attrValue);
+                        attrValue = compbinedUri.ToString();
+                    }
                 }
 
                 // Add the attribute, if it does not already exist
