@@ -3,6 +3,11 @@ using System.IO;
 
 namespace XHtmlKit
 {
+    /// <summary>
+    /// A simple Stream wrapper that caches the first 1024 characters of the stream.
+    /// This allows re-winding to the beginning, for cases where we wish to 
+    /// re-parse the stream (i.e. we detect a meta charset tag)
+    /// </summary>
     internal class HtmlStream : Stream
     {
         const int MaxCacheSize = 4096;
@@ -83,10 +88,10 @@ namespace XHtmlKit
             if (_writeToCache) {
                 _cache.Write(buffer, offset, bytesread);
 
-                // We have data in the cache, we can seek to origin now...
+                // We have data in the cache, we can now Rewind
                 _canRewind = true; 
 
-                // If we have filled the cache, we can now seek to the origin
+                // If we have filled the cache, stopped writing to it.
                 if (_cache.Length >= _cacheSize) {
                     _writeToCache = false;
                 }
@@ -94,7 +99,6 @@ namespace XHtmlKit
 
             // Return the total number of bytes read from either the cache or stream or both.     
             return bytesread;
-
         }
 
         public override bool CanSeek
@@ -120,7 +124,7 @@ namespace XHtmlKit
 
             // Ensure that user requested a seek to the beginning.
             if (!(origin == SeekOrigin.Begin && offset == 0))
-                throw new Exception("Internal Error. Seeking on this stream can only be used to restart at the beginning.");
+                throw new Exception("Internal Error. Seeking on an HtmlStream can only be used to rewind to the beginning.");
 
             // Move the pointer in our cache to the beginning.
             _cache.Seek(0, SeekOrigin.Begin);

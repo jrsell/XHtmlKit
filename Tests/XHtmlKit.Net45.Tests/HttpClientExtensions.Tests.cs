@@ -395,6 +395,14 @@ namespace XHtmlKit.Network.Tests
             </html>";
 
         [Test]
+        public void CheckEncodingEquality()
+        {
+            System.Text.Encoding en1 = System.Text.Encoding.UTF8;
+            System.Text.Encoding en2 = new System.Text.UTF8Encoding();
+            System.Text.Encoding en3 = new System.Text.UTF8Encoding(true);
+        }
+
+        [Test]
         public void DecodeUtf8()
         {
             TestReadingEncodedFile("utf8.xml", new System.Text.UTF8Encoding(false), new System.Text.UTF8Encoding());

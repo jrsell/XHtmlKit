@@ -13,10 +13,9 @@ namespace XHtmlKit.Network
     public class HtmlClientOptions
     {
         public bool DetectEncoding = true;
-        public Encoding DefaultEncoding = Encoding.UTF8;
+        public Encoding DefaultEncoding = new UTF8Encoding();   // New the encoding so that it is different from the StreamReader's 
         public string UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
     }
-
 
     /// <summary>
     /// Fetches an Html stream from the web

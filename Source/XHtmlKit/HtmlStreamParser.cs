@@ -240,9 +240,11 @@ namespace XHtmlKit
                         if (((properties & TagProperties.IsHeadTag) > 0) && (reader.CurrentEncodingConfidence == EncodingConfidence.Tentative) && reader.CanRewind && (tok == "meta"))
                         {
                             Encoding encoding = CheckForNewEncoding(tag, dom);
-                            
+
                             // If we found a new encoding encoding, we will need to start over!
-                            if (encoding != null /* TODO: and if it is different from current one ? */)
+                            string newEncodingName = encoding != null ? encoding.WebName : String.Empty;
+                            string currentEncodingName = reader.CurrentEncoding != null ? reader.CurrentEncoding.WebName : String.Empty;
+                            if (encoding != null && (newEncodingName != currentEncodingName) )
                             {
                                 // Start over from the beginning!
                                 reader.Rewind(encoding); // Rewind underlying stream, set new encoding
