@@ -52,15 +52,15 @@ namespace ComparePerf
                 for (int i = 0; i < iterations; i++)
                     searchResults = XHtmlKit_ParseAndSearch(sampleFileContents, xpath);
                 sw.Stop();
-                Console.Write("\tXHtmlKit (ms): " + sw.ElapsedMilliseconds + (searchResults.Length > 0 ? " (" + searchResults.Length + ")" : ""));
+                Console.Write("\tXHtmlKit Xml: " + sw.ElapsedMilliseconds + " ms" + (searchResults.Length > 0 ? " (" + searchResults.Length + ")" : ""));
 
-                // Parser2: XHtmlKit.Linq
+                // Parser2: XHtmlKit
                 sw = new Stopwatch();
                 sw.Start();
                 for (int i = 0; i < iterations; i++)
                     searchResults = XHtmlKit_Linq_ParseAndSearch(sampleFileContents, xpath);
                 sw.Stop();
-                Console.Write("\tXHtmlKit.Linq (ms): " + sw.ElapsedMilliseconds + (searchResults.Length > 0 ? " (" + searchResults.Length + ")": ""));
+                Console.Write("\tXDocument: " + sw.ElapsedMilliseconds + " ms" + (searchResults.Length > 0 ? " (" + searchResults.Length + ")": ""));
 
                 // Parser3: tHtmlAgility
                 sw = new Stopwatch();
@@ -68,7 +68,7 @@ namespace ComparePerf
                 for (int i = 0; i < iterations; i++)
                     searchResults = HtmlAgility_ParseAndSearch(sampleFileContents, xpath);
                 sw.Stop();
-                Console.Write("\tHtmlAgility (ms): " + sw.ElapsedMilliseconds + (searchResults.Length > 0 ? " (" + searchResults.Length + ")" : ""));
+                Console.Write("\tHtmlAgility: " + sw.ElapsedMilliseconds + " ms " + (searchResults.Length > 0 ? " (" + searchResults.Length + ")" : ""));
 
                 Console.Write("\n");
             }

@@ -62,13 +62,13 @@
     <None Include="XHtmlKit.snk" />
   </ItemGroup>
   <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\Source\XHtmlKit\XHtmlKit.csproj">
       <Project>{9beee864-d212-4922-b190-2224f3205909}</Project>
       <Name>XHtmlKit</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -92,14 +92,17 @@ namespace XHtmlKit
 
             Beginning:
 
+            // Make sure root node is clear
+            dom.RemoveAll(dom.RootNode); 
+
             // DOM Node pointers
             DomNode currNode = dom.RootNode;
             DomNode htmlNode = default(DomNode); 
             DomNode headNode = default(DomNode); 
             DomNode bodyNode = default(DomNode);
 
-            // Set the initial insertion mode. If we are parsing into an XmlDocument, use
-            // BeforeHtml, use InBody;
+            // If we are parsing a fragment, the initial insersion mode will 
+            // be: 'InBody', otherwise it will be: 'BeforeHtml'
             InsersionMode insertionMode = mode;
 
             while (reader.ParseState != ParseState.Done)
@@ -248,7 +251,6 @@ namespace XHtmlKit
                             {
                                 // Start over from the beginning!
                                 reader.Rewind(encoding); // Rewind underlying stream, set new encoding
-                                dom.RemoveAll(dom.RootNode); // Clear DOM so far
                                 goto Beginning;
                             }
                         }                        

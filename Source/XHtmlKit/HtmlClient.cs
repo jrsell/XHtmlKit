@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Net.Http;
 using System.Collections.Generic;
+using System.Xml;
+using System.Xml.Linq;
 
 
 namespace XHtmlKit.Network
@@ -35,76 +37,28 @@ namespace XHtmlKit.Network
             get { return _options; }
         }
 
-
-        public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(string url)
+        public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(this HttpContent content, Encoding defaultEncoding, bool detectEncoding)
         {
-            return await GetHtmlTextReaderAsync(url, HtmlClient.Options);
-        }
-
-        /// <summary>
-        /// Returns a TextReader that detects the underlying stream's endoding. Allows clients to stream the 
-        /// retured content using a TextReader. This method is similar in purpose to GetStreamAsync, however, GetStreamAsync
-        /// doesn't detect the Stream's encoding as GetStringAsync does. 
-        /// </summary>
-        /// <param name="httpClient"></param>
-        public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(string url, HtmlClientOptions options)
-        {
-            HtmlClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
-            Uri uri = new Uri(url);
-
-            // See if the url pointed to a file. If so, return a reader with an underlying file stream.
-            if (uri.IsFile) {
-                FileStream fs = File.OpenRead(uri.AbsolutePath);
-                HtmlStream stream = new HtmlStream(fs);
-                HtmlTextReader reader = new HtmlTextReader(stream, options.DefaultEncoding, EncodingConfidence.Tentative);
-                reader.OriginatingUrl = url;
-                return reader;
-            }
-
-            // Set user agent if one was specified
-            if (!string.IsNullOrEmpty(optionsToUse.UserAgent)) {
-                HttpClient.DefaultRequestHeaders.Remove("User-Agent");
-                HttpClient.DefaultRequestHeaders.Add("User-Agent", optionsToUse.UserAgent);
-            }
-
-            // Get the Http response
-            HttpResponseMessage responseMessage = await HttpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
-
-            // Ensure success
-            responseMessage.EnsureSuccessStatusCode();
-
-            // Check to ensure there is content to return. 
-            HttpContent content = responseMessage.Content;
-            if (content == null)
-            {
-                HtmlTextReader reader = new HtmlTextReader(String.Empty);
-                reader.OriginatingUrl = url;
-                foreach (var header in content.Headers) {
-                    reader.OriginatingHttpHeaders.Add(new KeyValuePair<string, string>(header.Key, string.Join(";", header.Value)));
-                }
-                return reader;
-            }
-            
             // Try to get the stream's encoding from the Response Headers, or fall back on default. 
             // We will also try to detect the encoding from the Byte Order Mark if there is no encoding supplied
             // by the headers. If both of these fail, the Parser should look for an encoding in the <meta> tags of 
             // the html itself.
-            Encoding encoding = optionsToUse.DefaultEncoding;
+            Encoding encoding = defaultEncoding;
 
             // Try to detect the encoding from Http Headers
             bool gotEncodingFromHttpHeaders = false;
-            if (optionsToUse.DetectEncoding)
+            if (detectEncoding)
             {
                 var contentHeaders = content.Headers;
                 string charset = (contentHeaders.ContentType != null) ? contentHeaders.ContentType.CharSet : null;
                 encoding = EncodingUtils.GetEncoding(charset);
                 gotEncodingFromHttpHeaders = encoding != null;
-                encoding = (encoding == null ? optionsToUse.DefaultEncoding : encoding);
+                encoding = (encoding == null ? defaultEncoding : encoding);
                 System.Diagnostics.Debug.WriteLine("Detected encoding: charset: " + charset + ", got encoding from headers: " + gotEncodingFromHttpHeaders);
             }
 
             // Out of band encoding can be either passed in by clients, or found in the http headers...
-            bool gotEncodingFromOutOfBandSource = !optionsToUse.DetectEncoding || gotEncodingFromHttpHeaders;
+            bool gotEncodingFromOutOfBandSource = !detectEncoding|| gotEncodingFromHttpHeaders;
             EncodingConfidence encodingConfidence = gotEncodingFromOutOfBandSource ? EncodingConfidence.Certain : EncodingConfidence.Tentative;
 
             // If encoding was NOT supplied out of band, then we will try to detect it from the stream's BOM
@@ -119,14 +73,61 @@ namespace XHtmlKit.Network
             // Return a HtmlTextReader with the encoding as detected so far... 
             HtmlTextReader htmlReader = new HtmlTextReader(baseStream, encoding, encodingConfidence);
 
-            // Store some metadata about how the stream came to be...
-            htmlReader.OriginatingUrl = url;
-            foreach (var header in content.Headers)
-            {
-                htmlReader.OriginatingHttpHeaders.Add(new KeyValuePair<string, string>(header.Key, string.Join(";", header.Value)));
+            return htmlReader;
+        }
+
+        public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(string url)
+        {
+            return await GetHtmlTextReaderAsync(url, HtmlClient.Options);
+        }
+
+        /// <summary>
+        /// Returns a TextReader that detects the underlying stream's endoding. Allows clients to stream the 
+        /// retured content using a TextReader. This method is similar in purpose to GetStreamAsync, however, GetStreamAsync
+        /// doesn't detect the Stream's encoding as GetStringAsync does. 
+        /// </summary>
+        /// <param name="httpClient"></param>
+        public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(string url, HtmlClientOptions options)
+        {
+            HtmlTextReader reader;
+            HtmlClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
+            Uri uri = new Uri(url);
+
+            // See if the url pointed to a file. If so, return a reader with a file stream
+            // under the hood.
+            if (uri.IsFile) {
+                FileStream fs = File.OpenRead(uri.AbsolutePath);
+                HtmlStream stream = new HtmlStream(fs);
+                reader = new HtmlTextReader(stream, options.DefaultEncoding, EncodingConfidence.Tentative);
+                reader.OriginatingUrl = url;
+                return reader;
             }
 
-            return htmlReader;
+            // Set a user agent if one was specified
+            if (!string.IsNullOrEmpty(optionsToUse.UserAgent)) {
+                HttpClient.DefaultRequestHeaders.Remove("User-Agent");
+                HttpClient.DefaultRequestHeaders.Add("User-Agent", optionsToUse.UserAgent);
+            }
+
+            // Get the Http response (only read the headers at this point) and ensure succes
+            HttpResponseMessage responseMessage = await HttpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+            responseMessage.EnsureSuccessStatusCode();
+
+            // If there is no content to return, return an empty HtmlTextReader 
+            HttpContent content = responseMessage.Content;
+            if (content == null) {
+                reader = new HtmlTextReader(String.Empty);
+            } else {
+                reader = await content.GetHtmlTextReaderAsync(optionsToUse.DefaultEncoding, optionsToUse.DetectEncoding);
+            }
+
+            // Store some metadata on the reader. Could be used by a parser. 
+            reader.OriginatingUrl = url;
+            foreach (var header in content.Headers) {
+                reader.OriginatingHttpHeaders.Add(new KeyValuePair<string, string>(header.Key, string.Join(";", header.Value)));
+            }
+
+            return reader;
         }
 
     }

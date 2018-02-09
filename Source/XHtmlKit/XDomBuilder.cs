@@ -62,7 +62,7 @@ namespace XHtmlKit
 
         public override void RemoveAll(XNode node)
         {
-            XElement elem = (XElement)node;
+            XContainer elem = (XContainer)node;
             while (elem.LastNode != null)
                 elem.LastNode.Remove();
         }
