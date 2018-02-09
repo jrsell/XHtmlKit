@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html>
+  <head>
+    <title>MultiByte</title>
+  </head>
+  <body>
+    <h1>This is a sample html file containing multi-byte characters, requiring encoding</h1>
+    <p>【楽天市場】</p>
+    <p>Shopping is Entertainment! ： インターネット最大級の通信販売、通販オンラインショッピングコミュニティ</p>
+  </body>
+</html>

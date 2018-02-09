@@ -5,6 +5,7 @@ using System.Xml;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Reflection;
 using XHtmlKit.Network;
 using XHtmlKit.Query;
 
@@ -457,7 +458,7 @@ namespace XHtmlKit.Network.Tests
 
             // Create Encoded file
             string fullName = sampleDir + fileName;
-            using (TextWriter sw = new StreamWriter(fullName, false, encoding) ) 
+            using (TextWriter sw = new StreamWriter(File.Create(fullName), encoding) ) 
             {
                 doc.Save(sw);
             }
@@ -473,8 +474,8 @@ namespace XHtmlKit.Network.Tests
         public static string AssemblyDirectory
         {
             get
-            {
-                string codeBase = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
+            {                
+                string codeBase = typeof(HttpClientExtensions_Tests).GetTypeInfo().Assembly.CodeBase;
                 UriBuilder uri = new UriBuilder(codeBase);
                 string path = Uri.UnescapeDataString(uri.Path);
                 return Path.GetDirectoryName(path);
