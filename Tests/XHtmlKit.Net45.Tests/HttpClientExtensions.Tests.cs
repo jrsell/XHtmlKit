@@ -381,5 +381,97 @@ namespace XHtmlKit.Network.Tests
                 return charsRead;
             }
         }
+
+        static string _sampleMultiByteHtml = @"
+            <html>
+                <head>
+                    <title>MultiByte</title>
+                </head>
+                <body>
+                    <h1>This is a sample html file containing multi-byte characters, requiring encoding</h1>
+                    <p>【楽天市場】</p>   
+                    <p>Shopping is Entertainment! ： インターネット最大級の通信販売、通販オンラインショッピングコミュニティ</p>
+                </body>
+            </html>";
+
+        [Test]
+        public void DecodeUtf8()
+        {
+            TestReadingEncodedFile("utf8.xml", new System.Text.UTF8Encoding(false), new System.Text.UTF8Encoding());
+        }
+
+        [Test]
+        public void DecodeUtf8_BOM()
+        {
+            TestReadingEncodedFile("utf8_BOM.xml", new System.Text.UTF8Encoding(true), new System.Text.UTF8Encoding());
+        }
+
+        [Test]
+        public void Decode_BigEndianUnicode()
+        {
+            TestReadingEncodedFile("BigEndianUnicode.xml", new System.Text.UnicodeEncoding(true, true), new System.Text.UTF8Encoding());
+        }
+
+        [Test]
+        public void Decode_LittleEndianUnicode()
+        {
+            TestReadingEncodedFile("LittleEndianUnicode.xml", new System.Text.UnicodeEncoding(false, true), new System.Text.UTF8Encoding());
+        }
+
+        [Test]
+        public void Decode_BigEndianUTF32()
+        {
+            TestReadingEncodedFile("BigEndianUTF32.xml", new System.Text.UTF32Encoding(true, true), new System.Text.UTF8Encoding());
+        }
+
+        [Test]
+        public void Decode_LitteEndianUTF32()
+        {
+            TestReadingEncodedFile("LitteEndianUTF32.xml", new System.Text.UTF32Encoding(false, true), new System.Text.UTF8Encoding());
+        }
+
+        public void TestReadingEncodedFile(string fileName, System.Text.Encoding encoding, System.Text.Encoding defaultEncoding)
+        {
+            // Set some options, so that we can know if things are working...
+            XHtmlLoaderOptions loaderOptions = new XHtmlLoaderOptions();
+            loaderOptions.ClientOptions.DetectEncoding = true;
+            loaderOptions.ClientOptions.DefaultEncoding = defaultEncoding;
+            loaderOptions.ParserOptions.IncludeMetaData = true;
+
+            // Load multi-byte html file into memory
+            XmlDocument doc = XHtmlLoader.LoadXmlDocument(_sampleMultiByteHtml);
+
+            // Ensure Sample directory exists
+            string sampleDir = (new DirectoryInfo(AssemblyDirectory)).Parent.Parent.Parent.FullName + "\\SampleData\\";
+            if (!Directory.Exists(sampleDir)) {
+                Directory.CreateDirectory(sampleDir);
+            }
+
+            // Create Encoded file
+            string fullName = sampleDir + fileName;
+            using (TextWriter sw = new StreamWriter(fullName, false, encoding) ) 
+            {
+                doc.Save(sw);
+            }
+
+            // Re-load into memory
+            XmlDocument doc2 = XHtmlLoader.LoadXmlDocumentAsync("file://" + fullName, loaderOptions).Result;
+            Console.WriteLine("Reading file: " + fileName);
+            Console.WriteLine(doc2.OuterXml);
+            Assert.AreEqual(doc.SelectSingleNode("//body").OuterXml, doc2.SelectSingleNode("//body").OuterXml);
+        }
+
+
+        public static string AssemblyDirectory
+        {
+            get
+            {
+                string codeBase = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
+                UriBuilder uri = new UriBuilder(codeBase);
+                string path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetDirectoryName(path);
+            }
+        }
+
     }
 }

@@ -51,15 +51,25 @@ namespace XHtmlKit.Network
         public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(string url, HtmlClientOptions options)
         {
             HtmlClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
+            Uri uri = new Uri(url);
 
-            // Set user agent if specified
+            // See if the url pointed to a file. If so, return a reader with an underlying file stream.
+            if (uri.IsFile) {
+                FileStream fs = File.OpenRead(uri.AbsolutePath);
+                HtmlStream stream = new HtmlStream(fs);
+                HtmlTextReader reader = new HtmlTextReader(stream, options.DefaultEncoding, EncodingConfidence.Tentative);
+                reader.OriginatingUrl = url;
+                return reader;
+            }
+
+            // Set user agent if one was specified
             if (!string.IsNullOrEmpty(optionsToUse.UserAgent)) {
                 HttpClient.DefaultRequestHeaders.Remove("User-Agent");
                 HttpClient.DefaultRequestHeaders.Add("User-Agent", optionsToUse.UserAgent);
             }
 
             // Get the Http response
-            HttpResponseMessage responseMessage = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+            HttpResponseMessage responseMessage = await HttpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
             // Ensure success
             responseMessage.EnsureSuccessStatusCode();
@@ -70,8 +80,7 @@ namespace XHtmlKit.Network
             {
                 HtmlTextReader reader = new HtmlTextReader(String.Empty);
                 reader.OriginatingUrl = url;
-                foreach (var header in content.Headers)
-                {
+                foreach (var header in content.Headers) {
                     reader.OriginatingHttpHeaders.Add(new KeyValuePair<string, string>(header.Key, string.Join(";", header.Value)));
                 }
                 return reader;
