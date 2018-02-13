@@ -14,8 +14,8 @@
     <PackageOutputPath>$(SolutionDir)..\Packages</PackageOutputPath>
     <NoPackageAnalysis>true</NoPackageAnalysis> 
     <Description>A lightweight Html parser for use with native XmlDocument, and XDocument. Fast, memory efficient, tolerant of malformed Html, allows parsing from a stream, and has built-in encoding detection.</Description>
-    <PackageTags>Html Parser XHtml Parsing Agility</PackageTags>
-    <PackageReleaseNotes>Initial release of the XHtmlKit.</PackageReleaseNotes>
+    <PackageTags>Html Parser XHtml Parsing</PackageTags>
+    <PackageReleaseNotes>Re-organized public Api naming to be a bit more intuitive. Added an 'Extensions' namespace to make exposure to the Extension methods optional.</PackageReleaseNotes>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <Version>1.0.2</Version>
     <RepositoryUrl>https://github.com/jrsell/XHtmlKit</RepositoryUrl>

@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NugetTest_Net20", "NugetTest\NugetTest_Net20.csproj", "{54143BF0-95D4-464E-A544-5BFBCB8CF4FB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NugetTest_Net45", "NugetTest\NugetTest_Net45.csproj", "{54143BF0-95D4-464E-A544-5BFBCB8CF4FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
