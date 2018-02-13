@@ -8,25 +8,14 @@ XHtmlKit is a true Stream parser - extremely fast, and memory efficient. Initial
 Here's how you use it: 
 
 ~~~~
-using System;
-using System.Xml;
-using XHtmlKit;
+// Load Html string into an XmlDocument 
+XmlDocument doc1 = XHtmlLoader.LoadHtml("<html><body><h1>Hello World</h1><p>This is a test</body>");
+Console.WriteLine("OuterXml is: " + doc1.OuterXml);
 
-class Program
-{
-    static void Main(string[] args)
-    {
-        // Load Html string into an XmlDocument 
-        XmlDocument doc1 = XHtmlLoader.LoadHtml("<html><head><title>Hello World!</title><body><h1>Hello World</h1><p>This is a test</body>");
-        Console.WriteLine("OuterXml is: " + doc1.OuterXml);
-
-        // Load web page into an XmlDocument 
-        XmlDocument doc2 = XHtmlLoader.LoadWebPageAsync("http://wikipedia.org").Result;
-        string title = doc2.SelectSingleNode("//title").InnerText;
-        Console.WriteLine("Title is: " + title);
-    }
-}
-
+// Load web page into an XmlDocument 
+XmlDocument doc2 = XHtmlLoader.LoadWebPageAsync("http://wikipedia.org").Result;
+string title = doc2.SelectSingleNode("//title").InnerText;
+Console.WriteLine("Title is: " + title);
 ~~~~
 
 XHtmlKit is a [nuget package](https://www.nuget.org/packages/XHtmlKit/) that can be downloaded from the Nuget site.
