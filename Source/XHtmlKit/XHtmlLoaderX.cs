@@ -16,27 +16,27 @@ namespace XHtmlKit
         #region LoadHtml overloads
         public static XDocument LoadHtml(string html)
         {
-            return LoadHtml(new StringReader(html), new HtmlParserOptions());
+            return LoadHtml(new StringReader(html), new ParserOptions());
         }
 
-        public static XDocument LoadHtml(string html, HtmlParserOptions options)
+        public static XDocument LoadHtml(string html, ParserOptions options)
         {
             return LoadHtml(new StringReader(html), options);
         }
 
         public static XDocument LoadHtml(TextReader htmlTextReader)
         {
-            return LoadHtml(htmlTextReader, new HtmlParserOptions());
+            return LoadHtml(htmlTextReader, new ParserOptions());
         }
 
-        public static XDocument LoadHtml(TextReader reader, HtmlParserOptions options)
+        public static XDocument LoadHtml(TextReader reader, ParserOptions options)
         {
             XDocument doc = new XDocument();
             LoadHtml(doc, reader, options);
             return doc;
         }
 
-        internal static void LoadHtml(XDocument doc, TextReader reader, HtmlParserOptions options)
+        internal static void LoadHtml(XDocument doc, TextReader reader, ParserOptions options)
         {
             XDomBuilder dom = new XDomBuilder(doc);
             HtmlStreamParser<XNode> parser = new HtmlStreamParser<XNode>();
@@ -49,10 +49,10 @@ namespace XHtmlKit
 
         public static void LoadHtmlFragment(XNode node, string html)
         {
-            LoadHtmlFragment(node, new StringReader(html), new HtmlParserOptions());
+            LoadHtmlFragment(node, new StringReader(html), new ParserOptions());
         }
 
-        public static void LoadHtmlFragment(XNode node, TextReader reader, HtmlParserOptions options)
+        public static void LoadHtmlFragment(XNode node, TextReader reader, ParserOptions options)
         {
             XDomBuilder dom = new XDomBuilder(node);
             HtmlStreamParser<XNode> parser = new HtmlStreamParser<XNode>();
@@ -82,7 +82,7 @@ namespace XHtmlKit
             optionsToUse.ParserOptions.BaseUrl = string.IsNullOrEmpty(optionsToUse.ParserOptions.BaseUrl) ? url : optionsToUse.ParserOptions.BaseUrl;
 
             // Get the Html asynchronously and Parse it into an Xml Document            
-            using (HtmlTextReader htmlReader = await HtmlClient.GetHtmlTextReaderAsync(url, optionsToUse.ClientOptions))
+            using (HtmlTextReader htmlReader = await HtmlClient.GetHtmlTextReaderAsync(url, optionsToUse))
             {
                 XDomBuilder dom = new XDomBuilder(doc);
                 HtmlStreamParser<XNode> parser = new HtmlStreamParser<XNode>();

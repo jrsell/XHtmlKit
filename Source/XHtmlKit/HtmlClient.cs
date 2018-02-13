@@ -12,17 +12,10 @@ using System.Xml.Linq;
 
 namespace XHtmlKit.Network
 {
-    public class HtmlClientOptions
-    {
-        public bool DetectEncoding = true;
-        public Encoding DefaultEncoding = new UTF8Encoding();   // New the encoding so that it is different from the StreamReader's 
-        public string UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
-    }
-
     /// <summary>
     /// Fetches an Html stream from the web
     /// </summary>
-    public static class HtmlClient
+    internal static class HtmlClient
     {
         private static HttpClient _httpClient = new HttpClient();
         public static HttpClient HttpClient
@@ -31,8 +24,8 @@ namespace XHtmlKit.Network
             set { _httpClient = value; }
         }
 
-        private static HtmlClientOptions _options= new HtmlClientOptions();
-        public static HtmlClientOptions Options
+        private static ClientOptions _options= new ClientOptions();
+        public static ClientOptions Options
         {
             get { return _options; }
         }
@@ -87,10 +80,10 @@ namespace XHtmlKit.Network
         /// doesn't detect the Stream's encoding as GetStringAsync does. 
         /// </summary>
         /// <param name="httpClient"></param>
-        public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(string url, HtmlClientOptions options)
+        public static async Task<HtmlTextReader> GetHtmlTextReaderAsync(string url, ClientOptions options)
         {
             HtmlTextReader reader;
-            HtmlClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
+            ClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
             Uri uri = new Uri(url);
 
             // See if the url pointed to a file. If so, return a reader with a file stream

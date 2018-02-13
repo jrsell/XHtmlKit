@@ -198,7 +198,7 @@ namespace XHtmlKit.Parser.Tests
             Assert.AreEqual(' ', (char)reader.Peek());
         }
 
-        public static KeyValuePair<string, ParseState>[] ReadAll(HtmlTextReader reader)
+        internal static KeyValuePair<string, ParseState>[] ReadAll(HtmlTextReader reader)
         {
             List<KeyValuePair<string, ParseState>> toks = new List<KeyValuePair<string, ParseState>>();
             while (reader.ParseState != ParseState.Done)

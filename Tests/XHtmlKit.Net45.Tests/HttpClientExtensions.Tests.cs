@@ -198,10 +198,10 @@ namespace XHtmlKit.Network.Tests
         public async Task DetectEncoding_utf_8_withWrongDefault()
         {
             // Google supplies utf-8 in headers
-            await TestGetTextReaderAsync_ForEncoding("http://google.com", "Google", new HtmlClientOptions {DefaultEncoding = System.Text.Encoding.ASCII } );
+            await TestGetTextReaderAsync_ForEncoding("http://google.com", "Google", new ClientOptions {DefaultEncoding = System.Text.Encoding.ASCII } );
 
             // These guys don't - but they have it in the <meta>
-            await TestGetTextReaderAsync_ForEncoding("http://Familydoctor.com.cn", "家庭医生在线_做中国专业的健康门户网站", new HtmlClientOptions { DefaultEncoding = System.Text.Encoding.ASCII });
+            await TestGetTextReaderAsync_ForEncoding("http://Familydoctor.com.cn", "家庭医生在线_做中国专业的健康门户网站", new ClientOptions { DefaultEncoding = System.Text.Encoding.ASCII });
         }
 
         [Test]
@@ -250,9 +250,9 @@ namespace XHtmlKit.Network.Tests
             await TestGetTextReaderAsync_ForEncoding("https://www.rakuten.co.jp/", "【楽天市場】Shopping is Entertainment! ： インターネット最大級の通信販売、通販オンラインショッピングコミュニティ");
         }
 
-        public async Task TestGetTextReaderAsync_ForEncoding(string url, string expectedTitle, HtmlClientOptions options = null)
+        public async Task TestGetTextReaderAsync_ForEncoding(string url, string expectedTitle, ClientOptions options = null)
         {
-            HtmlClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
+            ClientOptions optionsToUse = options == null ? HtmlClient.Options : options;
             XmlDocument doc1 = new XmlDocument();
 
             System.Text.Encoding initialEncoding=null;
@@ -265,7 +265,7 @@ namespace XHtmlKit.Network.Tests
                 initialEncoding = textReader.CurrentEncoding;
                 initialConfidence = textReader.CurrentEncodingConfidence;
 
-                HtmlParser.DefaultParser.Parse(doc1, textReader, new HtmlParserOptions { BaseUrl = url } );
+                HtmlParser.DefaultParser.Parse(doc1, textReader, new ParserOptions { BaseUrl = url } );
 
                 finalEncoding = textReader.CurrentEncoding;
                 finalConfidence = textReader.CurrentEncodingConfidence;
@@ -443,8 +443,8 @@ namespace XHtmlKit.Network.Tests
         {
             // Set some options, so that we can know if things are working...
             LoaderOptions loaderOptions = new LoaderOptions();
-            loaderOptions.ClientOptions.DetectEncoding = true;
-            loaderOptions.ClientOptions.DefaultEncoding = defaultEncoding;
+            loaderOptions.DetectEncoding = true;
+            loaderOptions.DefaultEncoding = defaultEncoding;
             loaderOptions.ParserOptions.IncludeMetaData = true;
 
             // Load multi-byte html file into memory

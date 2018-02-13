@@ -12,27 +12,27 @@ namespace XHtmlKit
 
         public static XmlDocument LoadHtml(string html)
         {
-            return LoadHtml(html, new HtmlParserOptions());
+            return LoadHtml(html, new ParserOptions());
         }
 
-        public static XmlDocument LoadHtml(string html, HtmlParserOptions options)
+        public static XmlDocument LoadHtml(string html, ParserOptions options)
         {
             return LoadHtml(new StringReader(html), options);
         }
 
         public static XmlDocument LoadHtml(TextReader htmlTextReader)
         {
-            return LoadHtml(htmlTextReader, new HtmlParserOptions());
+            return LoadHtml(htmlTextReader, new ParserOptions());
         }
 
-        public static XmlDocument LoadHtml(TextReader htmlTextReader, HtmlParserOptions options)
+        public static XmlDocument LoadHtml(TextReader htmlTextReader, ParserOptions options)
         {
             XmlDocument doc = new XmlDocument();
             LoadHtml(doc, htmlTextReader, options);
             return doc;
         }
 
-        internal static void LoadHtml(XmlDocument doc, TextReader htmlTextReader, HtmlParserOptions options)
+        internal static void LoadHtml(XmlDocument doc, TextReader htmlTextReader, ParserOptions options)
         {
             XmlDomBuilder dom = new XmlDomBuilder(doc);
             HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
@@ -42,10 +42,10 @@ namespace XHtmlKit
 
         public static void LoadHtmlFragment(XmlNode node, string html)
         {
-            LoadHtmlFragment(node, new StringReader(html), new HtmlParserOptions());
+            LoadHtmlFragment(node, new StringReader(html), new ParserOptions());
         }
 
-        public static void LoadHtmlFragment(XmlNode node, TextReader reader, HtmlParserOptions options)
+        public static void LoadHtmlFragment(XmlNode node, TextReader reader, ParserOptions options)
         {
             XmlDomBuilder dom = new XmlDomBuilder(node);
             HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();

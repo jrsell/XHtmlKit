@@ -26,7 +26,7 @@ namespace XHtmlKit.Parser.Tests
         }
 
 
-        public static void LinqCompare(XmlDocument doc, string html, HtmlParserOptions options = null)
+        public static void LinqCompare(XmlDocument doc, string html, ParserOptions options = null)
         {
 #if !net20
             // Linq check
@@ -237,7 +237,7 @@ namespace XHtmlKit.Parser.Tests
 
             </body></html>";
             string baseUrl = "http://www.foobar.com/products/cat1/someprod.html";
-            HtmlParserOptions options = new HtmlParserOptions { BaseUrl = baseUrl };
+            ParserOptions options = new ParserOptions { BaseUrl = baseUrl };
             XmlDocument doc = XHtmlLoader.LoadHtml(html, options );
             
             Console.WriteLine(doc.OuterXml);
@@ -366,7 +366,7 @@ namespace XHtmlKit.Parser.Tests
             </body>
             </html>";
 
-            HtmlParserOptions options = new HtmlParserOptions { BaseUrl = "http://foobar.com", FullyQualifyUrls = false };
+            ParserOptions options = new ParserOptions { BaseUrl = "http://foobar.com", FullyQualifyUrls = false };
             XmlDocument doc = XHtmlLoader.LoadHtml(html, options);
             Console.WriteLine(doc.OuterXml);
 

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace XHtmlKit
 {
 
-    public enum ParseState
+    internal enum ParseState
     {
         Comment,
         OpenTag,
@@ -18,23 +18,17 @@ namespace XHtmlKit
         Done
     }
 
-    public enum EncodingConfidence
+    internal enum EncodingConfidence
     {
         Irrelevant,
         Tentative,
         Certain
     }
 
-    //public class HtmlStreamMetaData
-    //{
-    //    public string OriginatingUrl = String.Empty;
-    //    public List<KeyValuePair<string, string>> HttpHeaders = new List<KeyValuePair<string, string>>();
-    //}
-
     /// <summary>
     /// A fast & memory-efficient, HTML Tag Tokenizer.
     /// </summary>
-    public class HtmlTextReader: IDisposable
+    internal class HtmlTextReader: IDisposable
     {
         private HtmlStream _htmlStream;
         private TextReader _reader;

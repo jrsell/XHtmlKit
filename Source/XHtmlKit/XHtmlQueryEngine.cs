@@ -13,16 +13,20 @@ namespace XHtmlKit.Query
     /// Adds extensions to the XmlDocument class for querying the document
     /// using XPath... 
     /// </summary>
-    public class XHtmlQueryEngine
+    internal class XHtmlQueryEngine
     {
-        private HtmlParser _htmlParser = null;
+        private HtmlParser _htmlParser = HtmlParser.DefaultParser;
 
-        public XHtmlQueryEngine(HtmlParser parser=null)
+        /// <summary>
+        /// For internal use only - allow initialization of XHtmlQueryEngine
+        /// with a different parser
+        /// </summary>
+        internal XHtmlQueryEngine(HtmlParser parser=null)
         {
             _htmlParser = parser != null ? parser :  HtmlParser.DefaultParser;
         }
 
-        public HtmlParser Parser
+        private HtmlParser Parser
         {
             get { return _htmlParser; }
         }
@@ -111,7 +115,7 @@ namespace XHtmlKit.Query
         {
             // Load content from html string
             XmlDocument xhtmlDoc = new XmlDocument();
-            this.Parser.Parse(xhtmlDoc, new HtmlTextReader(html), new HtmlParserOptions{ BaseUrl = originatingUrl });
+            this.Parser.Parse(xhtmlDoc, new HtmlTextReader(html), new ParserOptions{ BaseUrl = originatingUrl });
 
             // Create a result element to mount results onto if none was supplied
             XmlElement resultElem = output;
@@ -143,7 +147,7 @@ namespace XHtmlKit.Query
 
             // Get the Html asynchronously and Parse it into an Xml Document            
             using (HtmlTextReader htmlReader = await HtmlClient.GetHtmlTextReaderAsync(url))
-                this.Parser.Parse(xhtmlDoc, htmlReader, new HtmlParserOptions { BaseUrl = url } );
+                this.Parser.Parse(xhtmlDoc, htmlReader, new ParserOptions { BaseUrl = url } );
 
             return xhtmlDoc;
         }

@@ -64,8 +64,8 @@ namespace Crawler
             // Gather HtmlParser and HtmlClient options
             LoaderOptions xhtmlLoaderOptions = new LoaderOptions();
             xhtmlLoaderOptions.ParserOptions.IncludeMetaData = crawlerSettings.IncludeMetaData;
-            xhtmlLoaderOptions.ClientOptions.DetectEncoding = (crawlerSettings.Encoding == null);
-            xhtmlLoaderOptions.ClientOptions.DefaultEncoding = crawlerSettings.Encoding != null ? System.Text.Encoding.GetEncoding(crawlerSettings.Encoding) : xhtmlLoaderOptions.ClientOptions.DefaultEncoding;
+            xhtmlLoaderOptions.DetectEncoding = (crawlerSettings.Encoding == null);
+            xhtmlLoaderOptions.DefaultEncoding = crawlerSettings.Encoding != null ? System.Text.Encoding.GetEncoding(crawlerSettings.Encoding) : xhtmlLoaderOptions.DefaultEncoding;
 
             // Create 'todo' and 'done' lists
             Queue<Link> urlsToCrawl = new Queue<Link>();

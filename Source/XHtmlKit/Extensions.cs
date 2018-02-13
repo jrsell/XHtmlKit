@@ -10,12 +10,12 @@ namespace XHtmlKit.Extensions
     {
         public static void LoadHtml(this XmlDocument doc, string html)
         {
-            XHtmlLoader.LoadHtml(doc, new StringReader(html), new HtmlParserOptions());
+            XHtmlLoader.LoadHtml(doc, new StringReader(html), new ParserOptions());
         }
 
         public static void LoadHtmlFragment(this XmlNode node, string html)
         {
-            XHtmlLoader.LoadHtmlFragment(node, new StringReader(html), new HtmlParserOptions());
+            XHtmlLoader.LoadHtmlFragment(node, new StringReader(html), new ParserOptions());
         }
 
         public static async Task LoadWebPageAsync(this XmlDocument doc, string url)
@@ -28,12 +28,12 @@ namespace XHtmlKit.Extensions
     {
         public static void LoadHtml(this XDocument doc, string html)
         {
-            XHtmlLoaderX.LoadHtml(doc, new StringReader(html), new HtmlParserOptions());
+            XHtmlLoaderX.LoadHtml(doc, new StringReader(html), new ParserOptions());
         }
 
         public static void LoadHtmlFragment(this XNode node, string html)
         {
-            XHtmlLoaderX.LoadHtmlFragment(node, new StringReader(html), new HtmlParserOptions());
+            XHtmlLoaderX.LoadHtmlFragment(node, new StringReader(html), new ParserOptions());
         }
 
         public static async Task LoadWebPageAsync(this XDocument doc, string url)

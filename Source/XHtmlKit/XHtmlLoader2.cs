@@ -6,13 +6,6 @@ using XHtmlKit.Network;
 
 namespace XHtmlKit
 {
-    public class LoaderOptions
-    {
-        private HtmlClientOptions _clientOptions = new HtmlClientOptions();
-        private HtmlParserOptions _parserOptions = new HtmlParserOptions();
-        public HtmlClientOptions ClientOptions { get { return _clientOptions; } }
-        public HtmlParserOptions ParserOptions { get { return _parserOptions; } }
-    }
 
     public static partial class XHtmlLoader
     {
@@ -37,7 +30,7 @@ namespace XHtmlKit
             HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
 
             // Get the Html asynchronously and Parse it into an Xml Document            
-            using (HtmlTextReader htmlReader = await HtmlClient.GetHtmlTextReaderAsync(url, optionsToUse.ClientOptions))
+            using (HtmlTextReader htmlReader = await HtmlClient.GetHtmlTextReaderAsync(url, optionsToUse))
                 parser.Parse(dom, htmlReader, optionsToUse.ParserOptions);
         }
     }

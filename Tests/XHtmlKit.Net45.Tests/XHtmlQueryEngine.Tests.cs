@@ -11,7 +11,7 @@ namespace XHtmlKit.Tests
     public class QueryEngine_Tests
     {
         private static XHtmlQueryEngine _queryEngine;
-        public static XHtmlQueryEngine QueryEngine
+        internal static XHtmlQueryEngine QueryEngine
         {
             get
             {
@@ -66,7 +66,7 @@ namespace XHtmlKit.Tests
         {
             // Transfer content to XmlDoc...
             XmlDocument xhtmlDoc = new XmlDocument();
-            HtmlParser.DefaultParser.Parse(xhtmlDoc, new HtmlTextReader(_testHTML), new HtmlParserOptions());
+            HtmlParser.DefaultParser.Parse(xhtmlDoc, new HtmlTextReader(_testHTML), new ParserOptions());
             Assert.AreEqual("html", xhtmlDoc.DocumentElement.Name);
             Console.WriteLine(xhtmlDoc.OuterXml);
         }
