@@ -20,6 +20,7 @@
     <Version>1.0.3</Version>
     <RepositoryUrl>https://github.com/jrsell/XHtmlKit</RepositoryUrl>
     <PackageProjectUrl>https://github.com/jrsell/XHtmlKit</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/jrsell/XHtmlKit/blob/master/LICENSE.txt</PackageLicenseUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net20'">
