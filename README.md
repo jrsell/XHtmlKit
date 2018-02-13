@@ -28,3 +28,7 @@ class Program
 }
 
 ~~~~
+
+XHtmlKit is a [nuget package](https://www.nuget.org/packages/XHtmlKit/) that can be downloaded from the Nuget site.
+
+
