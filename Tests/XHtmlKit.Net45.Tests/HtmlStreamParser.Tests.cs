@@ -1,10 +1,13 @@
 ﻿using System;
 using NUnit.Framework;
-using System.IO;
-using XHtmlKit;
-using System.Threading.Tasks;
 using System.Xml;
+using XHtmlKit;
+using System.IO;
+
+#if !net20
 using System.Xml.Linq;
+using System.Threading.Tasks;
+#endif
 
 namespace XHtmlKit.Parser.Tests
 {
@@ -22,13 +25,16 @@ namespace XHtmlKit.Parser.Tests
             return sb.ToString();
         }
 
+
         public static void LinqCompare(XmlDocument doc, string html, HtmlParserOptions options = null)
         {
+#if !net20
             // Linq check
-            XDocument xdoc = XHtmlLoader.LoadXDocument(html, options);
+            XDocument xdoc = XHtmlLoaderX.LoadHtml(html, options);
             string xdocOuterXml = xdoc.ToString(SaveOptions.DisableFormatting);
             Console.WriteLine(xdocOuterXml);
             Assert.AreEqual(doc.OuterXml, xdocOuterXml);
+#endif
         }
 
         /// <summary>
@@ -42,7 +48,7 @@ namespace XHtmlKit.Parser.Tests
             <h1>Hello World</h1>
             </body></html>";
 
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             string doc1 = doc.OuterXml;
             Console.WriteLine(doc1);
 
@@ -60,7 +66,7 @@ namespace XHtmlKit.Parser.Tests
             <html><body>
             <h1>Hello World</h1><p> para <head>somehead</head> end para </p>
             </body></html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the <head> inside the body tag is ingnored
@@ -85,7 +91,7 @@ namespace XHtmlKit.Parser.Tests
                 <body>
             <h1>Hello World</h1>
             </body></html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the text under meta ignored, since meta is a self-closing tag
@@ -108,7 +114,7 @@ namespace XHtmlKit.Parser.Tests
                     <body foo='bar'>
                 </div></html>";
             XmlDocument doc = new XmlDocument();
-            XHtmlLoader.LoadXmlFragment(doc, html);
+            XHtmlLoader.LoadHtmlFragment(doc, html);
 
             Console.WriteLine(doc.OuterXml);
 
@@ -132,7 +138,7 @@ namespace XHtmlKit.Parser.Tests
             XmlElement parent = doc.CreateElement("foo");
             doc.AppendChild(parent);
 
-            XHtmlLoader.LoadXmlFragment(parent, html);
+            XHtmlLoader.LoadHtmlFragment(parent, html);
 
             Console.WriteLine( ToFormattedString(doc));
 
@@ -158,7 +164,7 @@ namespace XHtmlKit.Parser.Tests
                     <h1>Hello World</h1>
                 </body>
             </html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             Console.WriteLine(doc.OuterXml);
 
             Assert.AreEqual("foo", doc.SelectSingleNode("//body").Attributes["class"].Value);
@@ -181,7 +187,7 @@ namespace XHtmlKit.Parser.Tests
                 ga('send', 'pageview<table>');
             </script>
             </body></html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the </body> inside the script is treated as RCData...
@@ -202,7 +208,7 @@ namespace XHtmlKit.Parser.Tests
             <body>
             <h1>Hello World</h1>
             </body></html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the </TITLE> match is case insenstive...
@@ -232,7 +238,7 @@ namespace XHtmlKit.Parser.Tests
             </body></html>";
             string baseUrl = "http://www.foobar.com/products/cat1/someprod.html";
             HtmlParserOptions options = new HtmlParserOptions { BaseUrl = baseUrl };
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html, options );
+            XmlDocument doc = XHtmlLoader.LoadHtml(html, options );
             
             Console.WriteLine(doc.OuterXml);
 
@@ -260,7 +266,7 @@ namespace XHtmlKit.Parser.Tests
             <h1>Hello World</h1>
             Some text <b><i>italics</b></i>
             </body></html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             Console.WriteLine(doc.OuterXml);
 
             // The <b> tag should contain the <i> tag
@@ -279,7 +285,7 @@ namespace XHtmlKit.Parser.Tests
         {
             string html = @"<settings id=01 class=red foo=bar />";
             XmlDocument doc = new XmlDocument();
-            XHtmlLoader.LoadXmlFragment(doc, html);
+            XHtmlLoader.LoadHtmlFragment(doc, html);
 
             Console.WriteLine(ToFormattedString(doc));
 
@@ -312,7 +318,7 @@ namespace XHtmlKit.Parser.Tests
 		            <a id=11 class=red/>class='red/'</a>
 	            </body>
             </html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             Console.WriteLine(ToFormattedString(doc));
 
             // Linq check
@@ -336,7 +342,7 @@ namespace XHtmlKit.Parser.Tests
                 </p>
             </body>
             </html>some after text";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the comment shows up at the beginning, and the text at the end...
@@ -361,7 +367,7 @@ namespace XHtmlKit.Parser.Tests
             </html>";
 
             HtmlParserOptions options = new HtmlParserOptions { BaseUrl = "http://foobar.com", FullyQualifyUrls = false };
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html, options);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html, options);
             Console.WriteLine(doc.OuterXml);
 
             // Ensure the comment shows up at the beginning, and the text at the end...
@@ -386,7 +392,7 @@ namespace XHtmlKit.Parser.Tests
                     <ahref='http://yyk.familydoctor.com.cn/1389/' target='_blank'>南方医科大学南方医院</a>
                 </body>
             </html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
 
             Console.WriteLine(ToFormattedString(doc));
 
@@ -410,7 +416,7 @@ namespace XHtmlKit.Parser.Tests
             <h1>Hello World</h1>
             Some_&nbsp;_text > hello &gt; &copy; &#169; <b><i>italics</b></i>
             </body></html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
 
             Console.WriteLine(ToFormattedString(doc));
 
@@ -434,7 +440,7 @@ namespace XHtmlKit.Parser.Tests
             <html lang='en'><body>
             <h1>Hello World</h1><html lang='fr' style='green'>
             </body></html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
 
             Console.WriteLine(ToFormattedString(doc));
 
@@ -464,7 +470,7 @@ namespace XHtmlKit.Parser.Tests
             Some text <br> Some more text <img src='foobar.jpg'> more text <hr><a>foo</a>
             <p/> non self-closing </p>
             </body></html>";
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
 
             Console.WriteLine(doc.OuterXml);
 

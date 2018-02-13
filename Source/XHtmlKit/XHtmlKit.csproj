@@ -17,7 +17,7 @@
     <PackageTags>Html Parser XHtml Parsing Agility</PackageTags>
     <PackageReleaseNotes>Initial release of the XHtmlKit.</PackageReleaseNotes>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <Version>1.0.1</Version>
+    <Version>1.0.2-beta</Version>
     <RepositoryUrl>https://github.com/jrsell/XHtmlKit</RepositoryUrl>
   </PropertyGroup>
 

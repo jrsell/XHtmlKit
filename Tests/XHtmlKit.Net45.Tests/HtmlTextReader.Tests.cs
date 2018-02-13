@@ -198,12 +198,12 @@ namespace XHtmlKit.Parser.Tests
             Assert.AreEqual(' ', (char)reader.Peek());
         }
 
-        public static Tuple<string, ParseState>[] ReadAll(HtmlTextReader reader)
+        public static KeyValuePair<string, ParseState>[] ReadAll(HtmlTextReader reader)
         {
-            List<Tuple<string, ParseState>> toks = new List<Tuple<string, ParseState>>();
+            List<KeyValuePair<string, ParseState>> toks = new List<KeyValuePair<string, ParseState>>();
             while (reader.ParseState != ParseState.Done)
             {
-                toks.Add(new Tuple<string, ParseState>(reader.ReadNext(), reader.ParseState));
+                toks.Add(new KeyValuePair<string, ParseState>(reader.ReadNext(), reader.ParseState));
             }
             return toks.ToArray();
         }

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
 using System.Xml.XPath;
+using System.Xml.Linq;
 
 namespace ComparePerf
 {
@@ -80,7 +81,7 @@ namespace ComparePerf
         static string[] XHtmlKit_ParseAndSearch(string html, string xpath=null)
         {
             List<string> searchResults = new List<string>();
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(html);
+            XmlDocument doc = XHtmlLoader.LoadHtml(html);
             if (xpath != null)
             {
                 var results = doc.DocumentElement.SelectNodes(xpath);
@@ -96,11 +97,11 @@ namespace ComparePerf
         static string[] XHtmlKit_Linq_ParseAndSearch(string html, string xpath = null)
         {
             List<string> searchResults = new List<string>();
-            System.Xml.Linq.XDocument doc = XHtmlLoader.LoadXDocument(html);
+            XDocument doc = XHtmlLoaderX.LoadHtml(html);
             if (xpath != null)
             {
                 var results = doc.XPathSelectElements(xpath);
-                foreach (System.Xml.Linq.XElement node in results)
+                foreach (XElement node in results)
                 {
                     string result = node.Value;
                     searchResults.Add(result);

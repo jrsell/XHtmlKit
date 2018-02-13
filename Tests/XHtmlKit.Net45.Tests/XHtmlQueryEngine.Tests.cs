@@ -234,7 +234,7 @@ namespace XHtmlKit.Tests
         [Test]
         public void XML_Characters_InResults()
         {
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(_testHTML);
+            XmlDocument doc = XHtmlLoader.LoadHtml(_testHTML);
             Console.WriteLine(ToFormattedString(doc));
 
             string query = "<row xpath='//body/div/@class'></row>";

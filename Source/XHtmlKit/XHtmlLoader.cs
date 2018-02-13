@@ -4,32 +4,35 @@ using System.IO;
 
 namespace XHtmlKit
 {
+    /// <summary>
+    /// Static class for loading an XmlDocument with Html.
+    /// </summary>
     public partial class XHtmlLoader
     {
 
-        public static XmlDocument LoadXmlDocument(string html)
+        public static XmlDocument LoadHtml(string html)
         {
-            return LoadXmlDocument(html, new HtmlParserOptions());
+            return LoadHtml(html, new HtmlParserOptions());
         }
 
-        public static XmlDocument LoadXmlDocument(string html, HtmlParserOptions options)
+        public static XmlDocument LoadHtml(string html, HtmlParserOptions options)
         {
-            return LoadXmlDocument(new StringReader(html), options);
+            return LoadHtml(new StringReader(html), options);
         }
 
-        public static XmlDocument LoadXmlDocument(TextReader htmlTextReader)
+        public static XmlDocument LoadHtml(TextReader htmlTextReader)
         {
-            return LoadXmlDocument(htmlTextReader, new HtmlParserOptions());
+            return LoadHtml(htmlTextReader, new HtmlParserOptions());
         }
 
-        public static XmlDocument LoadXmlDocument(TextReader htmlTextReader, HtmlParserOptions options)
+        public static XmlDocument LoadHtml(TextReader htmlTextReader, HtmlParserOptions options)
         {
             XmlDocument doc = new XmlDocument();
-            LoadXmlDocument(doc, htmlTextReader, options);
+            LoadHtml(doc, htmlTextReader, options);
             return doc;
         }
 
-        private static void LoadXmlDocument(XmlDocument doc, TextReader htmlTextReader, HtmlParserOptions options)
+        internal static void LoadHtml(XmlDocument doc, TextReader htmlTextReader, HtmlParserOptions options)
         {
             XmlDomBuilder dom = new XmlDomBuilder(doc);
             HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();
@@ -37,12 +40,12 @@ namespace XHtmlKit
             parser.Parse(dom, reader, options);
         }
 
-        public static void LoadXmlFragment(XmlNode node, string html)
+        public static void LoadHtmlFragment(XmlNode node, string html)
         {
-            LoadXmlFragment(node, new StringReader(html), new HtmlParserOptions());
+            LoadHtmlFragment(node, new StringReader(html), new HtmlParserOptions());
         }
 
-        public static void LoadXmlFragment(XmlNode node, TextReader reader, HtmlParserOptions options)
+        public static void LoadHtmlFragment(XmlNode node, TextReader reader, HtmlParserOptions options)
         {
             XmlDomBuilder dom = new XmlDomBuilder(node);
             HtmlStreamParser<XmlNode> parser = new HtmlStreamParser<XmlNode>();

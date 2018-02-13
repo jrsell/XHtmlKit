@@ -442,13 +442,13 @@ namespace XHtmlKit.Network.Tests
         public void TestReadingEncodedFile(string fileName, System.Text.Encoding encoding, System.Text.Encoding defaultEncoding)
         {
             // Set some options, so that we can know if things are working...
-            XHtmlLoaderOptions loaderOptions = new XHtmlLoaderOptions();
+            LoaderOptions loaderOptions = new LoaderOptions();
             loaderOptions.ClientOptions.DetectEncoding = true;
             loaderOptions.ClientOptions.DefaultEncoding = defaultEncoding;
             loaderOptions.ParserOptions.IncludeMetaData = true;
 
             // Load multi-byte html file into memory
-            XmlDocument doc = XHtmlLoader.LoadXmlDocument(_sampleMultiByteHtml);
+            XmlDocument doc = XHtmlLoader.LoadHtml(_sampleMultiByteHtml);
 
             // Ensure Sample directory exists
             string sampleDir = (new DirectoryInfo(AssemblyDirectory)).Parent.Parent.Parent.FullName + "\\SampleData\\";
@@ -464,7 +464,7 @@ namespace XHtmlKit.Network.Tests
             }
 
             // Re-load into memory
-            XmlDocument doc2 = XHtmlLoader.LoadXmlDocumentAsync("file://" + fullName, loaderOptions).Result;
+            XmlDocument doc2 = XHtmlLoader.LoadWebPageAsync("file://" + fullName, loaderOptions).Result;
             Console.WriteLine("Reading file: " + fileName);
             Console.WriteLine(doc2.OuterXml);
             Assert.AreEqual(doc.SelectSingleNode("//body").OuterXml, doc2.SelectSingleNode("//body").OuterXml);

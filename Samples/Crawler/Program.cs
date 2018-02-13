@@ -50,7 +50,7 @@ namespace Crawler
             {
                 string settingsHtml = "<settings " + string.Join(" ", args) + " />";
                 XmlDocument settingsDoc = new XmlDocument();
-                XHtmlLoader.LoadXmlFragment(settingsDoc, settingsHtml.ToLower());
+                XHtmlLoader.LoadHtmlFragment(settingsDoc, settingsHtml.ToLower());
                 XmlElement settings = settingsDoc.DocumentElement;
 
                 crawlerSettings.Url = (settings.Attributes["url"] != null && !string.IsNullOrWhiteSpace(settings.Attributes["url"].Value)) ? settings.Attributes["url"].Value.Trim() : crawlerSettings.Url;
@@ -62,7 +62,7 @@ namespace Crawler
             }
 
             // Gather HtmlParser and HtmlClient options
-            XHtmlLoaderOptions xhtmlLoaderOptions = new XHtmlLoaderOptions();
+            LoaderOptions xhtmlLoaderOptions = new LoaderOptions();
             xhtmlLoaderOptions.ParserOptions.IncludeMetaData = crawlerSettings.IncludeMetaData;
             xhtmlLoaderOptions.ClientOptions.DetectEncoding = (crawlerSettings.Encoding == null);
             xhtmlLoaderOptions.ClientOptions.DefaultEncoding = crawlerSettings.Encoding != null ? System.Text.Encoding.GetEncoding(crawlerSettings.Encoding) : xhtmlLoaderOptions.ClientOptions.DefaultEncoding;
@@ -90,7 +90,7 @@ namespace Crawler
                 XmlDocument xhtmlDoc;
                 try
                 {
-                    xhtmlDoc = XHtmlLoader.LoadXmlDocumentAsync(currentUrl.Url, xhtmlLoaderOptions).Result;
+                    xhtmlDoc = XHtmlLoader.LoadWebPageAsync(currentUrl.Url, xhtmlLoaderOptions).Result;
                     Console.WriteLine(", [OK]");                        
                 }
                 catch (Exception ex)
