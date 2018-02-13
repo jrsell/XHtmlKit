@@ -1,5 +1,7 @@
 # XHtmlKit
-A lightweight Html parser for use with native XmlDocument, and XDocument. Fast, memory efficient, tolerant of malformed Html, allows parsing from a stream, and has built-in encoding detection.
+A lightweight Html parser for use with native XmlDocument, and XDocument. 
+
+XHtmlKit was initially inspired by the HtmlAgilityPack project, however, I wanted to manipulate results in a native XmlDocument without requiring conversion. Additinally, I didn't want to have to load the entire contents of an Html file into memory for parsing. XHtmlKit is a true Stream parser - extremely fast, and memory efficient. Initial tests show performance approximately 3 times faster than HtmlAgilityPack. It works equally well with both XmlDocument and XDocument. 
 
 ~~~~
 using System;
@@ -18,7 +20,7 @@ class Program
         XmlDocument doc2 = XHtmlLoader.LoadWebPageAsync("http://wikipedia.org").Result;
         string title = doc2.SelectSingleNode("//title").InnerText;
         Console.WriteLine("Title is: " + title);
-	}
+    }
 }
 
 ~~~~
