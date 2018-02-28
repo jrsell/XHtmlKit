@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using XHtmlKit;
-using XHtmlKit.Network;
 
 using System.Xml;
 
