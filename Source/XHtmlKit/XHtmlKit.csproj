@@ -17,7 +17,7 @@
     <PackageTags>Html Parser XHtml Parsing</PackageTags>
     <PackageReleaseNotes>Re-organized public Api naming to be a bit more intuitive. Added an 'Extensions' namespace to make exposure to the Extension methods optional.</PackageReleaseNotes>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <RepositoryUrl>https://github.com/jrsell/XHtmlKit</RepositoryUrl>
     <PackageProjectUrl>https://github.com/jrsell/XHtmlKit</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/jrsell/XHtmlKit/blob/master/LICENSE.txt</PackageLicenseUrl>
