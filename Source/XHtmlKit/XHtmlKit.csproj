@@ -21,6 +21,7 @@
     <RepositoryUrl>https://github.com/jrsell/XHtmlKit</RepositoryUrl>
     <PackageProjectUrl>https://github.com/jrsell/XHtmlKit</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/jrsell/XHtmlKit/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/jrsell/XHtmlKit/master/XHtmlKit.png</PackageIconUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net20'">
